@@ -39,7 +39,7 @@ public class Node : INode
     public System.Timers.Timer Timer { get; set; }
     public State State { get; set; }
     public List<INode> OtherNodes { get; set; }
-
+    public Dictionary<int, int> CurrentTermVotes { get; set; } = new();
     public int MajorityVote { get => OtherNodes.Count / 2 + 1; }
     public Task<bool> CastVoteRPC(int termId, bool vote)
     {
@@ -115,10 +115,15 @@ public class Node : INode
         }
 
         var currentNode = OtherNodes.Where(x => x.Id == candidateId).FirstOrDefault();
-        
+
         if (currentNode is not null)
         {
-            await currentNode.CastVoteRPC(candidateId, true);
+            if (!CurrentTermVotes.ContainsKey(currentNode.Id))
+            {
+                CurrentTermVotes.Add(currentNode.Id, termId);
+                await currentNode.CastVoteRPC(candidateId, true);
+            }
+            await currentNode.CastVoteRPC(candidateId, false);
         }
     }
 }

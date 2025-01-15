@@ -214,4 +214,21 @@ public class RaftTests
         // Assert
         await leaderNode.Received().CastVoteRPC(2, true);
     }
+
+    // Test #14
+    [Fact]
+    public async Task FollowerWontVoteTwiceForSameTerm()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        var followerNode = new Node([leaderNode], 1);
+
+        // Act
+        await followerNode.RequestVoteRPC(1, 2);
+        await followerNode.RequestVoteRPC(1, 2);
+
+        // Assert
+        await leaderNode.Received().CastVoteRPC(2, false);
+    }
 }
