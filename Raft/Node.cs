@@ -5,31 +5,31 @@ namespace Raft;
 
 public class Node : INode
 {
-    public Node(List<INode> otherNodes)
+    public Node(List<INode> otherNodes, int id)
     {
         State = State.Follower;
         Votes = 0;
         Term = 1;
         OtherNodes = otherNodes;
-        Id = OtherNodes.Count + 1;
+        Id = id;
     }
 
-    public Node(State startingState)
+    public Node(State startingState, int id)
     {
         State = startingState;
         Votes = 0;
         Term = 1;
         OtherNodes = new List<INode>();
-        Id = 1;
+        Id = id;
     }
 
-    public Node()
+    public Node(int id)
     {
         State = State.Follower;
         Votes = 0;
         Term = 1;
         OtherNodes = new List<INode>();
-        Id = 1;
+        Id = id;
     }
 
     public int Id { get; set; }
@@ -40,21 +40,23 @@ public class Node : INode
     public State State { get; set; }
     public List<INode> OtherNodes { get; set; }
 
-    public void CastVote()
+    public int MajorityVote { get => OtherNodes.Count / 2 + 1; }
+    public Task<bool> CastVoteRPC(int termId, bool vote)
     {
-        if (State == State.Candidate)
+        if (vote && termId == Term)
         {
             Votes += 1;
-            return;
+            return Task.FromResult(false);
         }
+        return Task.FromResult(false);
     }
 
     public void DetermineWinner()
     {
-        if (Votes >= (OtherNodes.Count / 2) + 1)
+        if (Votes >= MajorityVote)
         {
             State = State.Leader;
-            
+
             SendAppendEntriesRPC();
         }
         else
@@ -67,16 +69,17 @@ public class Node : INode
     {
         StartElectionTimer();
         Term += 1;
-        CastVote();
+        Votes = 1;
+        SendVoteRequestRPC();
         return;
     }
 
     public void StartElectionTimer()
     {
         Timer = new(Random.Shared.Next(150, 301));
-        Timer.Start();
         Timer.AutoReset = false;
         State = State.Candidate;
+        Timer.Start();
         Votes = 0;
     }
 
@@ -91,6 +94,20 @@ public class Node : INode
     }
 
     public Task<bool> RecieveAppendEntriesRPC()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> SendVoteRequestRPC()
+    {
+        foreach (var node in OtherNodes)
+        {
+            node.RequestVoteRPC(Term, Id);
+        }
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> RequestVoteRPC(int termId, int candidateId)
     {
         throw new NotImplementedException();
     }

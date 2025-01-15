@@ -12,7 +12,7 @@ public class RaftTests
     public void WhenNodeIsCreatedItIsAFollower()
     {
         // Arrange
-        Node testNode = new Node();
+        Node testNode = new Node(1);
 
         // Act 
         var result = testNode.State;
@@ -26,7 +26,7 @@ public class RaftTests
     public void FollowerStartsElectionAfterNoMessageFor300()
     {
         // Arrange
-        Node testNode = new Node();
+        Node testNode = new Node(1);
 
         // Act
         testNode.StartElection();
@@ -41,7 +41,7 @@ public class RaftTests
     public void CandidateGetsMajorityVotes()
     {
         // Arrange
-        var testNode = new Node();
+        var testNode = new Node(1);
 
         // Act
         testNode.StartElection();
@@ -57,7 +57,7 @@ public class RaftTests
     public void NewElectionBeginsTermCountIncrementsByOne()
     {
         // Arrange
-        var testNode = new Node();
+        var testNode = new Node(1);
 
         // Act
         testNode.StartElection();
@@ -72,7 +72,7 @@ public class RaftTests
     public void WhenFollowerBecomesCandidateTheyVoteForThemself()
     {
         // Arrange
-        var testNode = new Node();
+        var testNode = new Node(1);
 
         // Act
         testNode.StartElection();
@@ -87,10 +87,12 @@ public class RaftTests
     public void WhenElectionTimerExpiresInsideElectionAnotherElectionStarts()
     {
         // Arrange
-        var testNode1 = new Node();
-        var testNode2 = new Node();
+        var testNode1 = Substitute.For<INode>();
+        testNode1.Id = 1;
+        var testNode2 = Substitute.For<INode>();
+        testNode2.Id = 2;
         List<INode> otherNodes = new List<INode>() { testNode1, testNode2 };
-        var testNode = new Node(otherNodes);
+        var testNode = new Node(otherNodes, 3);
 
         // Act
         testNode.StartElection();
@@ -99,6 +101,7 @@ public class RaftTests
         testNode.DetermineWinner();
 
         // Assert
+        testNode.MajorityVote.Should().Be(2);
         testNode.Timer.Interval.Should().NotBe(result);
     }
 
@@ -107,10 +110,12 @@ public class RaftTests
     public void WhenElectionTimeIsResetItIsRandomBetween150and300()
     {
         // Arrange
-        var testNode1 = new Node();
-        var testNode2 = new Node();
+        var testNode1 = Substitute.For<INode>();
+        testNode1.Id = 1;
+        var testNode2 = Substitute.For<INode>();
+        testNode2.Id = 2;
         List<INode> otherNodes = new List<INode>() { testNode1, testNode2 };
-        var testNode = new Node(otherNodes);
+        var testNode = new Node(otherNodes, 3);
 
         // Act
         testNode.StartElection();
@@ -127,7 +132,7 @@ public class RaftTests
     public void WhenALeaderIsActiveItSendsAHeartbeatWithin50()
     {
         // Arrange
-        var leaderNode = new Node(State.Leader);
+        var leaderNode = new Node(State.Leader, 1);
 
         // Act
         var result = leaderNode.SendAppendEntriesRPC();
@@ -142,7 +147,8 @@ public class RaftTests
     {
         // Arrange
         var otherNode = Substitute.For<INode>();
-        var testNode = new Node([otherNode]);
+        otherNode.Id = 1;
+        var testNode = new Node([otherNode], 2);
 
         // Act
         testNode.StartElection();
@@ -160,7 +166,8 @@ public class RaftTests
     {
         // Arrange
         var otherNode = Substitute.For<INode>();
-        var leaderNode = new Node([otherNode]);
+        otherNode.Id = 1;
+        var leaderNode = new Node([otherNode], 2);
 
         // Act
         leaderNode.StartElection();
@@ -169,5 +176,26 @@ public class RaftTests
 
         // Assert
         otherNode.LeaderId.Should().Be(2);
+    }
+
+    // Test #9
+    [Fact]
+    public void UnresponsiveNodeStillGiveCandidateLeadershipStatus()
+    {
+        // Arrange
+        var followerNode1 = Substitute.For<INode>();
+        followerNode1.Id = 1;
+        var followerNode2 = Substitute.For<INode>();
+        followerNode2.Id = 2;
+        var leaderNode = new Node([followerNode1, followerNode2], 3);
+
+        // Act
+        leaderNode.StartElection();
+        Thread.Sleep(300);
+        leaderNode.CastVoteRPC(leaderNode.Term, true);
+        leaderNode.DetermineWinner();
+
+        // Assert
+        leaderNode.State.Should().Be(State.Leader);
     }
 }

@@ -13,7 +13,8 @@ public interface INode
     public List<INode> OtherNodes { get; set; }
     public void StartElectionTimer();
     public void StartElection();
-    public void CastVote();
+    public Task<bool> CastVoteRPC(int candidateId, bool vote);
+    public Task<bool> RequestVoteRPC(int termId, int candidateId);
     public Task<bool> SendAppendEntriesRPC();
     public Task<bool> RecieveAppendEntriesRPC();
     public void DetermineWinner();
