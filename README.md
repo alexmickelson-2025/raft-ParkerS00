@@ -30,7 +30,7 @@ A follower that has not voted and is in an earlier term responds to a RequestFor
 
 [X] Given a candidate, when an election timer expires inside of an election, a new election is started.
 
-[ ] When a follower node receives an AppendEntries request, it sends a response.
+[X] When a follower node receives an AppendEntries request, it sends a response.
 
 [ ] Given a candidate receives an AppendEntries from a previous term, then rejects.
 
