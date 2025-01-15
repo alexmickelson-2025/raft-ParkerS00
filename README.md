@@ -15,12 +15,12 @@
 
 [X] Given an election begins, when the candidate gets a majority of votes, it becomes a leader. 
 
-[ ] Given a candidate receives a majority of votes while waiting for unresponsive node, it still becomes a leader.
+[X] Given a candidate receives a majority of votes while waiting for unresponsive node, it still becomes a leader.
 A follower that has not voted and is in an earlier term responds to a RequestForVoteRPC with yes. 
 
 [X] Given a candidate server that just became a candidate, it votes for itself.
 
-[ ] Given a candidate, when it receives an AppendEntries message from a node with a later term, then candidate loses and becomes a follower.
+[X] Given a candidate, when it receives an AppendEntries message from a node with a later term, then candidate loses and becomes a follower.
 
 [ ] Given a candidate, when it receives an AppendEntries message from a node with an equal term, then candidate loses and becomes a follower.
 
