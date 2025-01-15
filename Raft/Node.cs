@@ -41,36 +41,13 @@ public class Node : INode
     public List<INode> OtherNodes { get; set; }
     public Dictionary<int, int> CurrentTermVotes { get; set; } = new();
     public int MajorityVote { get => OtherNodes.Count / 2 + 1; }
-    public Task<bool> CastVoteRPC(int termId, bool vote)
-    {
-        if (vote && termId == Term)
-        {
-            Votes += 1;
-            return Task.FromResult(false);
-        }
-        return Task.FromResult(false);
-    }
 
-    public void DetermineWinner()
-    {
-        if (Votes >= MajorityVote)
-        {
-            State = State.Leader;
-
-            SendAppendEntriesRPC();
-        }
-        else
-        {
-            StartElection();
-        }
-    }
-
-    public void StartElection()
+    public async Task StartElection()
     {
         StartElectionTimer();
         Term += 1;
         Votes = 1;
-        SendVoteRequestRPC();
+        await SendVoteRequestRPC();
         return;
     }
 
@@ -83,28 +60,50 @@ public class Node : INode
         Votes = 0;
     }
 
-    public Task<bool> SendAppendEntriesRPC()
+    public async Task DetermineWinner()
+    {
+        if (Votes >= MajorityVote)
+        {
+            State = State.Leader;
+
+            await SendAppendEntriesRPC();
+        }
+        else
+        {
+            await StartElection();
+        }
+    }
+
+    public async Task SendAppendEntriesRPC()
     {
         foreach (var node in OtherNodes)
         {
-            node.RecieveAppendEntriesRPC();
+            await node.RequestAppendEntriesRPC();
             node.LeaderId = Id;
         }
-        return Task.FromResult(true);
     }
 
-    public Task<bool> RecieveAppendEntriesRPC()
+    public async Task RequestAppendEntriesRPC()
     {
-        throw new NotImplementedException();
+        var currentNode = OtherNodes.Where(x => x.Id == LeaderId).FirstOrDefault();
+
+        if (currentNode is not null)
+        {
+            await currentNode.ConfirmAppendEntriesRPC();
+        }
     }
 
-    public Task<bool> SendVoteRequestRPC()
+    public async Task ConfirmAppendEntriesRPC()
+    {
+        await Task.CompletedTask;
+    }
+
+    public async Task SendVoteRequestRPC()
     {
         foreach (var node in OtherNodes)
         {
-            node.RequestVoteRPC(Term, Id);
+            await node.RequestVoteRPC(Term, Id);
         }
-        return Task.FromResult(true);
     }
 
     public async Task RequestVoteRPC(int termId, int candidateId)
@@ -125,5 +124,14 @@ public class Node : INode
             }
             await currentNode.CastVoteRPC(candidateId, false);
         }
+    }
+    public async Task CastVoteRPC(int termId, bool vote)
+    {
+        if (vote && termId == Term)
+        {
+            Votes += 1;
+            await Task.FromResult(false);
+        }
+        await Task.FromResult(false);
     }
 }

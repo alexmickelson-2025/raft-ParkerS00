@@ -13,10 +13,11 @@ public interface INode
     public Dictionary<int, int> CurrentTermVotes { get; set; }  
     public List<INode> OtherNodes { get; set; }
     public void StartElectionTimer();
-    public void StartElection();
-    public Task<bool> CastVoteRPC(int candidateId, bool vote);
+    public Task StartElection();
+    public Task CastVoteRPC(int candidateId, bool vote);
     public Task RequestVoteRPC(int termId, int candidateId);
-    public Task<bool> SendAppendEntriesRPC();
-    public Task<bool> RecieveAppendEntriesRPC();
-    public void DetermineWinner();
+    public Task SendAppendEntriesRPC();
+    public Task RequestAppendEntriesRPC();
+    public Task ConfirmAppendEntriesRPC();
+    public Task DetermineWinner();
 }
