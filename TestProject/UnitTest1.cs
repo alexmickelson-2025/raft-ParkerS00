@@ -198,4 +198,20 @@ public class RaftTests
         // Assert
         leaderNode.State.Should().Be(State.Leader);
     }
+
+    // Test #10
+    [Fact]
+    public async Task FollowerHasntVotedYetRespondsWithYesForRequestToVote()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        var followerNode = new Node([leaderNode], 1);
+
+        // Act
+        await followerNode.RequestVoteRPC(1, 2);
+
+        // Assert
+        await leaderNode.Received().CastVoteRPC(2, true);
+    }
 }

@@ -14,7 +14,7 @@ public interface INode
     public void StartElectionTimer();
     public void StartElection();
     public Task<bool> CastVoteRPC(int candidateId, bool vote);
-    public Task<bool> RequestVoteRPC(int termId, int candidateId);
+    public Task RequestVoteRPC(int termId, int candidateId);
     public Task<bool> SendAppendEntriesRPC();
     public Task<bool> RecieveAppendEntriesRPC();
     public void DetermineWinner();

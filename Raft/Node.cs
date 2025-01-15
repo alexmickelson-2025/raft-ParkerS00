@@ -107,8 +107,18 @@ public class Node : INode
         return Task.FromResult(true);
     }
 
-    public Task<bool> RequestVoteRPC(int termId, int candidateId)
+    public async Task RequestVoteRPC(int termId, int candidateId)
     {
-        throw new NotImplementedException();
+        if (Term > termId)
+        {
+            return;
+        }
+
+        var currentNode = OtherNodes.Where(x => x.Id == candidateId).FirstOrDefault();
+        
+        if (currentNode is not null)
+        {
+            await currentNode.CastVoteRPC(candidateId, true);
+        }
     }
 }
