@@ -231,4 +231,21 @@ public class RaftTests
         // Assert
         await leaderNode.Received().CastVoteRPC(2, false);
     }
+
+    // Test #15
+    [Fact]
+    public async Task FutureTermMakesThemVoteYes()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        var followerNode = new Node([leaderNode], 1);
+
+        // Act
+        await followerNode.RequestVoteRPC(1, 2);
+        await followerNode.RequestVoteRPC(2, 2);
+
+        // Assert
+        await leaderNode.Received().CastVoteRPC(2, true);
+    }
 }
