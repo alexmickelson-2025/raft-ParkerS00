@@ -45,9 +45,9 @@ public class SimulationNode : INode
         return ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
     }
 
-    public Task SendAppendEntriesRPC()
+    public Task SendAppendEntriesRPC(int termId)
     {
-        return ((INode)InnerNode).SendAppendEntriesRPC();
+        return ((INode)InnerNode).SendAppendEntriesRPC(termId);
     }
 
     public Task StartElection()

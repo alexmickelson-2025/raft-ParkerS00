@@ -1,5 +1,6 @@
 ﻿using ClassLibrary;
 using System.Timers;
+using System.Xml.Linq;
 
 namespace Raft;
 
@@ -66,7 +67,7 @@ public class Node : INode
         {
             State = State.Leader;
 
-            await SendAppendEntriesRPC();
+            await SendAppendEntriesRPC(Term);
         }
         else
         {
@@ -74,12 +75,15 @@ public class Node : INode
         }
     }
 
-    public async Task SendAppendEntriesRPC()
+    public async Task SendAppendEntriesRPC(int termId)
     {
-        foreach (var node in OtherNodes)
+        if (Term >= termId)
         {
-            await node.RequestAppendEntriesRPC();
-            node.LeaderId = Id;
+            foreach (var node in OtherNodes)
+            {
+                node.LeaderId = Id;
+                await node.RequestAppendEntriesRPC();
+            }
         }
     }
 
@@ -89,7 +93,10 @@ public class Node : INode
 
         if (currentNode is not null)
         {
-            await currentNode.ConfirmAppendEntriesRPC();
+            if (currentNode.Term >= Term)
+            {
+                await currentNode.ConfirmAppendEntriesRPC();
+            }
         }
     }
 

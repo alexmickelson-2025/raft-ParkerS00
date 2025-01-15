@@ -2,6 +2,7 @@ using ClassLibrary;
 using FluentAssertions;
 using NSubstitute;
 using Raft;
+using System.ComponentModel;
 
 namespace TestProject;
 
@@ -256,6 +257,7 @@ public class RaftTests
         // Arrange
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
+        leaderNode.Term = 1;
         var followerNode = new Node([leaderNode], 1);
         followerNode.LeaderId = 2;
 
@@ -265,4 +267,26 @@ public class RaftTests
         // Assert
         await leaderNode.Received().ConfirmAppendEntriesRPC();
     }
+
+    // Test #18
+    [Fact]
+    public async Task CandidateRecievesOldAppendEntriesFromPreviousTermRejects()
+    {
+        // Arrange
+        var candidateNode = Substitute.For<INode>();
+        candidateNode.State = State.Candidate;
+        candidateNode.Id = 1;
+        candidateNode.LeaderId = 2;
+        candidateNode.Term = 2;
+        var leaderNode = new Node([candidateNode], 2);
+        leaderNode.Term = 1;
+
+        // Act
+        await leaderNode.SendAppendEntriesRPC(candidateNode.Term);
+
+        // Assert
+        await candidateNode.DidNotReceive().RequestAppendEntriesRPC();
+    }
+
+    // 
 }
