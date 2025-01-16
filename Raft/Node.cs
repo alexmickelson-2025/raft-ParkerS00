@@ -96,6 +96,7 @@ public class Node : INode
             if (currentNode.Term >= Term)
             {
                 await currentNode.ConfirmAppendEntriesRPC();
+                State = State.Follower;
             }
         }
     }
