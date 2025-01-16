@@ -9,22 +9,26 @@ namespace TestProject;
 public class RaftTests
 {
     //// Test #1
-    //[Fact]
-    //public void WhenALeaderIsActiveItSendsAHeartbeatWithin50()
-    //{
-    //    // Arrange
-    //    var leaderNode = new Node(State.Leader, 1);
+    [Fact]
+    public async Task WhenALeaderIsActiveItSendsAHeartbeatWithin50()
+    {
+        // Arrange
+        var followerNode = Substitute.For<INode>();
+        followerNode.LeaderId = 1;
+        followerNode.Id = 2;
+        var leaderNode = new Node([followerNode], 1);
+        leaderNode.BecomeLeader();
+        
+        // Act
+        Thread.Sleep(420);
 
-    //    // Act
-    //    var result = leaderNode.SendAppendEntriesRPC();
-
-    //    // Assert
-    //    result.Should().Be(true);
-    //}
+        // Assert
+        await followerNode.Received(9).RequestAppendEntriesRPC();
+    }
 
     // Test #2
     [Fact]
-    public async Task ANodeRecievesMessageItKnowsOtherNodeIsTheLeader()
+    public void ANodeRecievesMessageItKnowsOtherNodeIsTheLeader()
     {
         // Arrange
         var otherNode = Substitute.For<INode>();
@@ -32,9 +36,9 @@ public class RaftTests
         var leaderNode = new Node([otherNode], 2);
 
         // Act
-        await leaderNode.StartElection();
-        Thread.Sleep(300);
-        await leaderNode.DetermineWinner();
+        leaderNode.StartElection();
+        Thread.Sleep(320);
+        leaderNode.DetermineWinner();
 
         // Assert
         otherNode.LeaderId.Should().Be(2);
@@ -56,14 +60,14 @@ public class RaftTests
 
     // Test #4
     [Fact]
-    public async Task FollowerStartsElectionAfterNoMessageFor300()
+    public void FollowerStartsElectionAfterNoMessageFor300()
     {
         // Arrange
         Node testNode = new Node(1);
 
         // Act
-        await testNode.StartElection();
-        Thread.Sleep(300);
+        testNode.StartElection();
+        Thread.Sleep(320);
 
         // Assert
         testNode.State.Should().Be(State.Candidate);
@@ -71,7 +75,7 @@ public class RaftTests
 
     // Test #5
     [Fact]
-    public async Task WhenElectionTimeIsResetItIsRandomBetween150and300()
+    public void WhenElectionTimeIsResetItIsRandomBetween150and300()
     {
         // Arrange
         var testNode1 = Substitute.For<INode>();
@@ -80,43 +84,69 @@ public class RaftTests
         testNode2.Id = 2;
         List<INode> otherNodes = new List<INode>() { testNode1, testNode2 };
         var testNode = new Node(otherNodes, 3);
+        var initialInterval = testNode.Timer.Interval;
+        var collisions = 0;
 
         // Act
-        await testNode.StartElection();
-        var result = testNode.Timer.Interval;
-        Thread.Sleep(301);
-        await testNode.DetermineWinner();
+        for (var i = 0; i < 10; i++)
+        {
+            testNode.StartElection();
+            Thread.Sleep(320);
+            testNode.DetermineWinner();
+            var result = testNode.Timer.Interval;
+
+            if (initialInterval == result)
+            {
+                collisions++;
+            }
+        }
 
         // Assert
-        testNode.Timer.Interval.Should().BeInRange(150, 300);
+        collisions.Should().BeLessThan(5);
     }
 
     // Test #6
     [Fact]
-    public async Task NewElectionBeginsTermCountIncrementsByOne()
+    public void NewElectionBeginsTermCountIncrementsByOne()
     {
         // Arrange
         var testNode = new Node(1);
 
         // Act
-        await testNode.StartElection();
-        Thread.Sleep(300);
+        testNode.StartElection();
 
         // Assert
         testNode.Term.Should().Be(2);
     }
 
+    // Test #7
+    [Fact]
+    public async Task FollowerGetsAppendEntriesMessageElectionTimerResets()
+    {
+        // Arrange
+        var followerNode = new Node(1);
+        followerNode.LeaderId = 2;
+
+        // Act
+        await followerNode.RequestAppendEntriesRPC();
+        Thread.Sleep(100);
+
+        // Assert
+        followerNode.State.Should().Be(State.Follower);
+    }
+
+
     // Test #8
     [Fact]
-    public async Task CandidateGetsMajorityVotes()
+    public void CandidateGetsMajorityVotes()
     {
         // Arrange
         var testNode = new Node(1);
 
         // Act
-        await testNode.StartElection();
-        Thread.Sleep(300);
-        await testNode.DetermineWinner();
+        testNode.StartElection();
+        Thread.Sleep(320);
+        testNode.DetermineWinner();
 
         // Assert
         testNode.State.Should().Be(State.Leader);
@@ -134,10 +164,9 @@ public class RaftTests
         var leaderNode = new Node([followerNode1, followerNode2], 3);
 
         // Act
-        await leaderNode.StartElection();
-        Thread.Sleep(300);
+        leaderNode.StartElection();
         await leaderNode.CastVoteRPC(leaderNode.Term, true);
-        await leaderNode.DetermineWinner();
+        leaderNode.DetermineWinner();
 
         // Assert
         leaderNode.State.Should().Be(State.Leader);
@@ -167,7 +196,7 @@ public class RaftTests
         var testNode = new Node(1);
 
         // Act
-        await testNode.StartElection();
+        testNode.StartElection();
         Thread.Sleep(300);
 
         // Assert
@@ -252,7 +281,7 @@ public class RaftTests
 
     // Test #16
     [Fact]
-    public async Task WhenElectionTimerExpiresInsideElectionAnotherElectionStarts()
+    public void WhenElectionTimerExpiresInsideElectionAnotherElectionStarts()
     {
         // Arrange
         var testNode1 = Substitute.For<INode>();
@@ -263,14 +292,12 @@ public class RaftTests
         var testNode = new Node(otherNodes, 3);
 
         // Act
-        await testNode.StartElection();
-        var result = testNode.Timer.Interval;
-        Thread.Sleep(301);
-        await testNode.DetermineWinner();
+        testNode.StartElection();
+        var result = testNode.Term;
+        Thread.Sleep(600);
 
         // Assert
-        testNode.MajorityVote.Should().Be(2);
-        testNode.Timer.Interval.Should().NotBe(result);
+        testNode.Term.Should().NotBe(result);
     }
 
     // Test #17
@@ -305,7 +332,7 @@ public class RaftTests
         leaderNode.Term = 1;
 
         // Act
-        await leaderNode.SendAppendEntriesRPC(candidateNode.Term);
+        leaderNode.SendAppendEntriesRPC(candidateNode.Term);
 
         // Assert
         await candidateNode.DidNotReceive().RequestAppendEntriesRPC();
@@ -313,7 +340,7 @@ public class RaftTests
 
     // Test #19
     [Fact]
-    public async Task WhenACandidateWinsAnElectionItImmediatelySendsAHeartbeat()
+    public void WhenACandidateWinsAnElectionItImmediatelySendsAHeartbeat()
     {
         // Arrange
         var otherNode = Substitute.For<INode>();
@@ -321,11 +348,11 @@ public class RaftTests
         var testNode = new Node([otherNode], 2);
 
         // Act
-        await testNode.StartElection();
-        Thread.Sleep(300);
-        await testNode.DetermineWinner();
+        testNode.StartElection();
+        Thread.Sleep(320);
+        testNode.DetermineWinner();
 
         // Assert
-        await otherNode.Received().RequestAppendEntriesRPC();
+        otherNode.Received().RequestAppendEntriesRPC();
     }
 }

@@ -30,9 +30,9 @@ public class SimulationNode : INode
         return ((INode)InnerNode).ConfirmAppendEntriesRPC();
     }
 
-    public Task DetermineWinner()
+    public void DetermineWinner()
     {
-        return ((INode)InnerNode).DetermineWinner();
+        ((INode)InnerNode).DetermineWinner();
     }
 
     public Task RequestAppendEntriesRPC()
@@ -45,14 +45,19 @@ public class SimulationNode : INode
         return ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
     }
 
-    public Task SendAppendEntriesRPC(int termId)
+    public void ResetElectionTimer()
     {
-        return ((INode)InnerNode).SendAppendEntriesRPC(termId);
+        ((INode)InnerNode).ResetElectionTimer();
     }
 
-    public Task StartElection()
+    public void SendAppendEntriesRPC(int termId)
     {
-        return ((INode)InnerNode).StartElection();
+        ((INode)InnerNode).SendAppendEntriesRPC(termId);
+    }
+
+    public void StartElection()
+    {
+        ((INode)InnerNode).StartElection();
     }
 
     public void StartElectionTimer()

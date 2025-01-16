@@ -13,6 +13,7 @@ public class Node : INode
         Term = 1;
         OtherNodes = otherNodes;
         Id = id;
+        StartElectionTimer();
     }
 
     public Node(State startingState, int id)
@@ -22,6 +23,7 @@ public class Node : INode
         Term = 1;
         OtherNodes = new List<INode>();
         Id = id;
+        StartElectionTimer();
     }
 
     public Node(int id)
@@ -31,6 +33,7 @@ public class Node : INode
         Term = 1;
         OtherNodes = new List<INode>();
         Id = id;
+        StartElectionTimer();
     }
 
     public int Id { get; set; }
@@ -43,46 +46,67 @@ public class Node : INode
     public Dictionary<int, int> CurrentTermVotes { get; set; } = new();
     public int MajorityVote { get => OtherNodes.Count / 2 + 1; }
 
-    public async Task StartElection()
+    public void StartElection()
     {
+        Timer.Dispose();
         StartElectionTimer();
+        State = State.Candidate;
         Term += 1;
         Votes = 1;
-        await SendVoteRequestRPC();
+        SendVoteRequestRPC();
         return;
     }
 
     public void StartElectionTimer()
     {
-        Timer = new(Random.Shared.Next(150, 301));
+        Timer = new(Random.Shared.Next(150, 300));
+        Timer.Elapsed += (s, e) => { StartElection(); };
         Timer.AutoReset = false;
-        State = State.Candidate;
         Timer.Start();
-        Votes = 0;
     }
 
-    public async Task DetermineWinner()
+    public void ResetElectionTimer()
+    {
+        Timer = new(Random.Shared.Next(150, 301));
+        Timer.AutoReset = false;
+        Timer.Start();
+    }
+
+    public void BecomeLeader()
+    {
+        Timer.Dispose();
+        State = State.Leader;
+        SendAppendEntriesRPC(Term);
+        StartHeartbeatTimer();
+    }
+
+    public void StartHeartbeatTimer()
+    {
+        Timer = new(50);
+        Timer.Elapsed += (s, e) => { SendAppendEntriesRPC(Term); }; 
+        Timer.Start();
+    }
+
+    public void DetermineWinner()
     {
         if (Votes >= MajorityVote)
         {
-            State = State.Leader;
-
-            await SendAppendEntriesRPC(Term);
+            BecomeLeader();
         }
         else
         {
-            await StartElection();
+            StartElection();
         }
     }
 
-    public async Task SendAppendEntriesRPC(int termId)
+    public void SendAppendEntriesRPC(int termId)
     {
         if (Term >= termId)
         {
             foreach (var node in OtherNodes)
             {
                 node.LeaderId = Id;
-                await node.RequestAppendEntriesRPC();
+                node.RequestAppendEntriesRPC();
             }
         }
     }
@@ -97,6 +121,7 @@ public class Node : INode
             {
                 await currentNode.ConfirmAppendEntriesRPC();
                 State = State.Follower;
+                ResetElectionTimer();
             }
         }
     }
@@ -106,11 +131,11 @@ public class Node : INode
         await Task.CompletedTask;
     }
 
-    public async Task SendVoteRequestRPC()
+    public void SendVoteRequestRPC()
     {
         foreach (var node in OtherNodes)
         {
-            await node.RequestVoteRPC(Term, Id);
+            node.RequestVoteRPC(Term, Id);
         }
     }
 
