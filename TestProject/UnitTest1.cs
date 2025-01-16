@@ -195,6 +195,27 @@ public class RaftTests
         candidateNode.State.Should().Be(State.Follower);
     }
 
+    // Test # 13
+    [Fact]
+    public async Task CandidateReceivesMessageFromNodeWithAnEqualTermShouldBecomeFollower()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        leaderNode.State = State.Leader;
+        leaderNode.Term = 1;
+        var candidateNode = new Node([leaderNode], 1);
+        candidateNode.State = State.Candidate;
+        candidateNode.Term = 1;
+        candidateNode.LeaderId = 2;
+
+        // Act
+        await candidateNode.RequestAppendEntriesRPC();
+
+        // Assert
+        candidateNode.State.Should().Be(State.Follower);
+    }
+
     // Test #14
     [Fact]
     public async Task FollowerWontVoteTwiceForSameTerm()
