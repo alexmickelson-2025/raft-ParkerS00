@@ -1,5 +1,5 @@
 ﻿# raft-ParkerS00
-[ ] When a leader is active it sends a heart beat within 50ms.
+[X] When a leader is active it sends a heart beat within 50ms.
 
 [X] When a node receives an AppendEntries from another node, then first node remembers that other node is the current leader.
 
@@ -22,7 +22,7 @@ A follower that has not voted and is in an earlier term responds to a RequestFor
 
 [X] Given a candidate, when it receives an AppendEntries message from a node with a later term, then candidate loses and becomes a follower.
 
-[ ] Given a candidate, when it receives an AppendEntries message from a node with an equal term, then candidate loses and becomes a follower.
+[X] Given a candidate, when it receives an AppendEntries message from a node with an equal term, then candidate loses and becomes a follower.
 
 [X] If a node receives a second request for vote for the same term, it should respond no. 
 
@@ -32,6 +32,6 @@ A follower that has not voted and is in an earlier term responds to a RequestFor
 
 [X] When a follower node receives an AppendEntries request, it sends a response.
 
-[ ] Given a candidate receives an AppendEntries from a previous term, then rejects.
+[X] Given a candidate receives an AppendEntries from a previous term, then rejects.
 
 [X] When a candidate wins an election, it immediately sends a heart beat.
