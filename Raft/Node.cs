@@ -44,7 +44,7 @@ public class Node : INode
     public State State { get; set; }
     public List<INode> OtherNodes { get; set; }
     public Dictionary<int, int> CurrentTermVotes { get; set; } = new();
-    public int MajorityVote { get => OtherNodes.Count / 2 + 1; }
+    public int MajorityVote { get => (OtherNodes.Count / 2) + 1; }
 
     public void StartElection()
     {
@@ -54,7 +54,6 @@ public class Node : INode
         Term += 1;
         Votes = 1;
         SendVoteRequestRPC();
-        return;
     }
 
     public void StartElectionTimer()
@@ -106,6 +105,7 @@ public class Node : INode
             foreach (var node in OtherNodes)
             {
                 node.LeaderId = Id;
+                node.State = State.Follower;
                 node.RequestAppendEntriesRPC();
             }
         }
@@ -163,8 +163,8 @@ public class Node : INode
         if (vote && termId == Term)
         {
             Votes += 1;
-            await Task.FromResult(false);
+            DetermineWinner();
         }
-        await Task.FromResult(false);
+        await Task.CompletedTask;
     }
 }

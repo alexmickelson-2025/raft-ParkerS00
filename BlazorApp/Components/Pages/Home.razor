@@ -10,14 +10,22 @@ Welcome to your new app.
 
 <button @onclick="startSimulation">Start</button>
 
-@foreach(var node in Nodes)
-{
-	<div>
-		@node.Id
-	</div>
-}
+<div class="row">
+	@foreach (var node in Nodes)
+	{
+		<div>
+			@node.Id
+			@node.State
+			@node.Term
+			@node.Timer.Interval
+			@node.LeaderId
+		</div>
+	}
+</div>
 
 @code {
+	bool isRunning = false;
+	private Timer? timer;
 
 	List<SimulationNode> Nodes = new();
 
@@ -36,5 +44,11 @@ Welcome to your new app.
 		node3.OtherNodes = [simulation1, simulation2];
 
 		Nodes = [simulation1, simulation2, simulation3];
+
+		isRunning = true;
+		timer = new Timer(_ =>
+		{
+			InvokeAsync(StateHasChanged);
+		}, null, 0, 320);
 	}
 }
