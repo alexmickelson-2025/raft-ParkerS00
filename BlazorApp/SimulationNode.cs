@@ -19,6 +19,8 @@ public class SimulationNode : INode
     public System.Timers.Timer Timer { get => ((INode)InnerNode).Timer; set => ((INode)InnerNode).Timer = value; }
     public Dictionary<int, int> CurrentTermVotes { get => ((INode)InnerNode).CurrentTermVotes; set => ((INode)InnerNode).CurrentTermVotes = value; }
     public List<INode> OtherNodes { get => ((INode)InnerNode).OtherNodes; set => ((INode)InnerNode).OtherNodes = value; }
+    public DateTime StartTime { get => ((INode)InnerNode).StartTime; set => ((INode)InnerNode).StartTime = value; }
+    public int NetworkDelay { get; set; }
 
     public Task CastVoteRPC(int candidateId, bool vote)
     {
@@ -35,14 +37,16 @@ public class SimulationNode : INode
         ((INode)InnerNode).DetermineWinner();
     }
 
-    public Task RequestAppendEntriesRPC()
+    public async Task RequestAppendEntriesRPC()
     {
-        return ((INode)InnerNode).RequestAppendEntriesRPC();
+        await Task.Delay(NetworkDelay);
+        await ((INode)InnerNode).RequestAppendEntriesRPC();
     }
 
-    public Task RequestVoteRPC(int termId, int candidateId)
+    public async Task RequestVoteRPC(int termId, int candidateId)
     {
-        return ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
+        await Task.Delay(NetworkDelay);
+        await ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
     }
 
     public void ResetElectionTimer()

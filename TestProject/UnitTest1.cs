@@ -185,7 +185,7 @@ public class RaftTests
         await followerNode.RequestVoteRPC(1, 2);
 
         // Assert
-        await leaderNode.Received().CastVoteRPC(2, true);
+        await leaderNode.Received().CastVoteRPC(1, true);
     }
 
     // Test #11
@@ -259,7 +259,7 @@ public class RaftTests
         await followerNode.RequestVoteRPC(1, 2);
 
         // Assert
-        await leaderNode.Received().CastVoteRPC(2, false);
+        await leaderNode.Received().CastVoteRPC(1, false);
     }
 
     // Test #15

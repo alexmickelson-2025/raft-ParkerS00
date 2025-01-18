@@ -10,6 +10,7 @@ public interface INode
     public int Votes { get; set; }
     public int Term { get; set; }
     public System.Timers.Timer Timer { get; set; }
+    public DateTime StartTime { get; set; }
     public Dictionary<int, int> CurrentTermVotes { get; set; }  
     public List<INode> OtherNodes { get; set; }
     public void StartElectionTimer();
