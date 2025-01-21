@@ -39,6 +39,7 @@ public class Node : INode
     public int MaxDelay { get; set; } = 300;
     public int MinDelay { get; set; } = 150;
     public int LeaderDelay { get; set; } = 50;
+    public List<Log> logs { get; set; } = new();
 
     public void StartElection()
     {
@@ -133,6 +134,7 @@ public class Node : INode
 
     public async Task ConfirmAppendEntriesRPC()
     {
+        logs.Add(new Log());
         await Task.CompletedTask;
     }
 
