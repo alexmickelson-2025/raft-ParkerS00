@@ -2,13 +2,12 @@ using ClassLibrary;
 using FluentAssertions;
 using NSubstitute;
 using Raft;
-using System.ComponentModel;
 
 namespace TestProject;
 
 public class RaftTests
 {
-    //// Test #1
+    // Test #1
     [Fact]
     public async Task WhenALeaderIsActiveItSendsAHeartbeatWithin50()
     {
@@ -23,7 +22,7 @@ public class RaftTests
         Thread.Sleep(420);
 
         // Assert
-        await followerNode.Received(9).RequestAppendEntriesRPC();
+        await followerNode.Received(9).RequestAppendEntriesRPC(leaderNode.Id, leaderNode.Term);
     }
 
     // Test #2
@@ -124,11 +123,14 @@ public class RaftTests
     public async Task FollowerGetsAppendEntriesMessageElectionTimerResets()
     {
         // Arrange
-        var followerNode = new Node(1);
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        leaderNode.Term = 1;
+        var followerNode = new Node([leaderNode], 1);
         followerNode.LeaderId = 2;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC();
+        await followerNode.RequestAppendEntriesRPC(leaderNode.Id, leaderNode.Term);
         Thread.Sleep(100);
 
         // Assert
@@ -218,7 +220,7 @@ public class RaftTests
         candidateNode.LeaderId = 2;
 
         // Act
-        await candidateNode.RequestAppendEntriesRPC();
+        await candidateNode.RequestAppendEntriesRPC(leaderNode.Id, leaderNode.Term);
 
         // Assert
         candidateNode.State.Should().Be(State.Follower);
@@ -239,7 +241,7 @@ public class RaftTests
         candidateNode.LeaderId = 2;
 
         // Act
-        await candidateNode.RequestAppendEntriesRPC();
+        await candidateNode.RequestAppendEntriesRPC(leaderNode.Id, leaderNode.Term);
 
         // Assert
         candidateNode.State.Should().Be(State.Follower);
@@ -312,7 +314,7 @@ public class RaftTests
         followerNode.LeaderId = 2;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC();
+        await followerNode.RequestAppendEntriesRPC(leaderNode.Id, leaderNode.Term);
 
         // Assert
         await leaderNode.Received().ConfirmAppendEntriesRPC();
@@ -335,7 +337,7 @@ public class RaftTests
         leaderNode.SendAppendEntriesRPC(candidateNode.Term);
 
         // Assert
-        await candidateNode.DidNotReceive().RequestAppendEntriesRPC();
+        await candidateNode.DidNotReceive().RequestAppendEntriesRPC(leaderNode.Id, leaderNode.Term);
     }
 
     // Test #19
@@ -353,6 +355,6 @@ public class RaftTests
         testNode.DetermineWinner();
 
         // Assert
-        otherNode.Received().RequestAppendEntriesRPC();
+        otherNode.Received().RequestAppendEntriesRPC(testNode.Id, testNode.Term);
     }
 }

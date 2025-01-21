@@ -113,9 +113,9 @@ Welcome to your new app.
         foreach (var node in Nodes)
         {
             node.NetworkDelay = NetworkRequestDelay;
-            node.InnerNode.MinDelay = node.InnerNode.MinDelay * NodeIntervalScalar;
-            node.InnerNode.MaxDelay = node.InnerNode.MaxDelay * NodeIntervalScalar;
-            //node.InnerNode.LeaderDelay = node.InnerNode.LeaderDelay * NodeIntervalScalar;
+            node.InnerNode.MinDelay = 150 * NodeIntervalScalar;
+            node.InnerNode.MaxDelay = 300 * NodeIntervalScalar;
+            //node.InnerNode.LeaderDelay = 50 * NodeIntervalScalar;
         }
     }
 }

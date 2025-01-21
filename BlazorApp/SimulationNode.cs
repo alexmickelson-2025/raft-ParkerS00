@@ -37,21 +37,16 @@ public class SimulationNode : INode
         ((INode)InnerNode).DetermineWinner();
     }
 
-    public async Task RequestAppendEntriesRPC()
+    public async Task RequestAppendEntriesRPC(int leaderId, int term)
     {
         await Task.Delay(NetworkDelay);
-        await ((INode)InnerNode).RequestAppendEntriesRPC();
+        await ((INode)InnerNode).RequestAppendEntriesRPC(leaderId, term);
     }
 
     public async Task RequestVoteRPC(int termId, int candidateId)
     {
         await Task.Delay(NetworkDelay);
         await ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
-    }
-
-    public void ResetElectionTimer()
-    {
-        ((INode)InnerNode).ResetElectionTimer();
     }
 
     public void SendAppendEntriesRPC(int termId)
