@@ -210,4 +210,40 @@ public class LoggingTests
         // Assert
         await leaderNode.Received().ConfirmAppendEntriesRPC(followerNode1.Term, followerNode1.NextIndex);
     }
+
+    // Test #12
+    //[Fact]
+    //public async Task LeaderReceivesMajorityResponsesNextHeartbeatLeader()
+    //{
+    //    // Arrange
+    //    var followerNode1 = Substitute.For<INode>();
+    //    followerNode1.Id = 1;
+    //    followerNode1.LeaderId = 2;
+    //    var leaderNode = new Node([followerNode1], 2);
+
+    //    // Act
+    //    await leaderNode.ConfirmAppendEntriesRPC(1, 1);
+
+    //    // Assert
+
+    //}
+
+    // Test #13
+    [Fact]
+    public void LeaderWhenCommitsLogsToStateMachine()
+    {
+        // Arrange
+        var followerNode1 = Substitute.For<INode>();
+        followerNode1.Id = 1;
+        followerNode1.LeaderId = 2;
+        var leaderNode = new Node([followerNode1], 2);
+
+        // Act
+        leaderNode.BecomeLeader();
+        leaderNode.RecieveClientCommand("test");
+        leaderNode.SendAppendEntriesRPC(leaderNode.Term, leaderNode.NextIndex);
+
+        // Assert
+        leaderNode.StateMachine.Count.Should().Be(1);
+    }
 }

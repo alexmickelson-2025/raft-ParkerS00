@@ -129,6 +129,7 @@ public class Node : INode
             if (command is not null)
             {
                 StateMachine[LeaderCommitIndex] = command;
+                SendClientConfirmation();
             }
         }
     }
@@ -203,6 +204,7 @@ public class Node : INode
 
     public async Task ConfirmAppendEntriesRPC(int term, int nextIndex)
     {
+        IncreaseCommitedLogs();
         await Task.CompletedTask;
     }
 
@@ -262,5 +264,10 @@ public class Node : INode
         Log newLog = new Log(Term, command);
         logs.Add(newLog);
         NextIndex = logs.Count;
+    }
+
+    public void SendClientConfirmation()
+    {
+        return;
     }
 }

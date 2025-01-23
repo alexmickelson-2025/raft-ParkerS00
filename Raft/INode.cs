@@ -23,4 +23,5 @@ public interface INode
     public Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit);
     public Task ConfirmAppendEntriesRPC(int term, int nextIndex);
     public void DetermineWinner();
+    public void SendClientConfirmation();
 }

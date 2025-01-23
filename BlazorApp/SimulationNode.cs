@@ -56,6 +56,11 @@ public class SimulationNode : INode
         ((INode)InnerNode).SendAppendEntriesRPC(termId, nextIndex);
     }
 
+    public void SendClientConfirmation()
+    {
+        ((INode)InnerNode).SendClientConfirmation();
+    }
+
     public void StartElection()
     {
         ((INode)InnerNode).StartElection();
