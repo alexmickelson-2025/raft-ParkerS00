@@ -179,6 +179,7 @@ public class LoggingTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.StateMachine = new();
         var followerNode1 = new Node([leaderNode], 1);
         var logs = new List<Log>();
         var log = new Log(1, "test");
@@ -199,6 +200,7 @@ public class LoggingTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.StateMachine = new();
         var followerNode1 = new Node([leaderNode], 1);
         var logs = new List<Log>();
         var log = new Log(1, "test");
@@ -245,5 +247,26 @@ public class LoggingTests
 
         // Assert
         leaderNode.StateMachine.Count.Should().Be(1);
+    }
+
+    // Test #14
+    [Fact]
+    public async Task AfterLeaderNodeCommittsFollowerNodesCommitOnNextHeartbeat()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        leaderNode.Term = 1;
+        leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
+        var followerNode = new Node([leaderNode], 2);
+        var logs = new List<Log>();
+        var log = new Log(1, "test");
+        logs.Add(log);
+
+        // Act
+        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 1);
+
+        // Assert
+        followerNode.StateMachine.Count.Should().Be(1); 
     }
 }

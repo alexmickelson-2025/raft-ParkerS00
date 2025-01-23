@@ -127,6 +127,7 @@ public class RaftTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.StateMachine = new();
         var followerNode = new Node([leaderNode], 1);
         followerNode.LeaderId = 2;
 
@@ -215,6 +216,7 @@ public class RaftTests
         leaderNode.Id = 2;
         leaderNode.State = State.Leader;
         leaderNode.Term = 2;
+        leaderNode.StateMachine = new();
         var candidateNode = new Node([leaderNode], 1);
         candidateNode.State = State.Candidate;
         candidateNode.Term = 1;
@@ -236,6 +238,7 @@ public class RaftTests
         leaderNode.Id = 2;
         leaderNode.State = State.Leader;
         leaderNode.Term = 1;
+        leaderNode.StateMachine = new();
         var candidateNode = new Node([leaderNode], 1);
         candidateNode.State = State.Candidate;
         candidateNode.Term = 1;
@@ -311,6 +314,7 @@ public class RaftTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.StateMachine = new();
         var followerNode = new Node([leaderNode], 1);
         followerNode.LeaderId = 2;
 

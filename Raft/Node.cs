@@ -197,6 +197,14 @@ public class Node : INode
                 {
                     logs.Add(log);
                 }
+                if (currentLeader.StateMachine.Count > StateMachine.Count)
+                {
+                    var command = logs[prevLogIndex].Command;
+                    if (command is not null)
+                    {
+                        StateMachine[prevLogIndex] = command;
+                    }
+                }
                 await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
             }
         }
