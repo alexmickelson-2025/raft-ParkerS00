@@ -354,7 +354,6 @@ public class LoggingTests
         followerNode1.Id = 3;
 
         var leaderNode = new Node([followerNode1, followerNode2], 2);
-        //leaderNode.State = State.Leader;
 
         // Act
         leaderNode.BecomeLeader();
@@ -364,5 +363,25 @@ public class LoggingTests
         // Assert
         leaderNode.StateMachine.Count.Should().Be(0);
         leaderNode.LeaderCommitIndex.Should().Be(0);
+    }
+
+    // Test #17
+    [Fact]
+    public void IfLeaderDoesntRecieveResponseFromFollowerLeaderContinuesToSendTheLogEntriesInHearbeats()
+    {
+        // Arrange
+        var followerNode1 = Substitute.For<INode>();
+        followerNode1.Id = 1;
+
+        var leaderNode = new Node([followerNode1], 2);
+        leaderNode.BecomeLeader();
+
+        // Act
+        Thread.Sleep(60);
+
+        // Assert
+        followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        Thread.Sleep(60);
+        followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
     }
 }
