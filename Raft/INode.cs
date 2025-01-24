@@ -15,6 +15,7 @@ public interface INode
     public Dictionary<int, int> CurrentTermVotes { get; set; }  
     public Dictionary<int, string> StateMachine { get; set; }
     public List<INode> OtherNodes { get; set; }
+    public List<Log> logs { get; set; }
     public void StartElectionTimer();
     public void StartElection();
     public Task CastVoteRPC(int candidateId, bool vote);

@@ -132,6 +132,26 @@ public class LoggingTests
         followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 1);
     }
 
+    // Test #7
+    [Fact]
+    public async Task FollowerLearnsThatLeaderCommitedItCommitsToItsLocalStateMachine()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        leaderNode.Term = 1;
+        leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
+        var followerNode = new Node([leaderNode], 2);
+        var logs = new List<Log>();
+        var log = new Log(1, "test");
+        logs.Add(log);
+
+        // Act
+        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 1, logs, 1);
+
+        // Assert
+        followerNode.StateMachine.Count.Should().Be(1);
+    }
 
     // Test #8
     [Fact]
@@ -264,9 +284,60 @@ public class LoggingTests
         logs.Add(log);
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 1, logs, 1);
 
         // Assert
         followerNode.StateMachine.Count.Should().Be(1); 
+    }
+
+    // Test #15.1
+    [Fact]
+    public async Task FollowerDoesNotFindEntryInItsLogWithSameIndexAndTerm()
+    {
+        // Arrange
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        leaderNode.Term = 1;
+        leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" }, { 2, "test 2" } };
+        var followerNode = new Node([leaderNode], 2);
+
+        // Act
+        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, new List<Log>(), 1);
+
+        // Assert
+        followerNode.logs.Count.Should().Be(0);
+        followerNode.StateMachine.Count.Should().Be(0);
+    }
+
+    // Test #15.2
+    [Fact]
+    public async Task IfFollowerRejectsLeaderDecrementsNextIndexAndTriesAgain()
+    {
+        // Arrange
+        var followerNode1 = Substitute.For<INode>();
+        followerNode1.Id = 1;
+        followerNode1.LeaderId = 2;
+        followerNode1.NextIndex = 0;
+
+        var leaderNode = new Node([followerNode1], 2);
+        leaderNode.NextIndex = 2;
+        leaderNode.Term = 1;
+        leaderNode.State = State.Leader;
+
+        var logs = new List<Log>();
+        var log = new Log(1, "test");
+        logs.Add(log);
+        var log2 = new Log(2, "test");
+        logs.Add(log2);
+        leaderNode.logs = logs;
+
+        // Act
+        leaderNode.StartHeartbeatTimer();
+        await leaderNode.ConfirmAppendEntriesRPC(followerNode1.Term, followerNode1.NextIndex);
+
+        // Assert
+        leaderNode.NextIndex.Should().Be(1);
+        Thread.Sleep(80);
+        await followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 1);
     }
 }

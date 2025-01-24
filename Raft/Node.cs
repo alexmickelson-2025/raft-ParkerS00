@@ -1,4 +1,5 @@
 ﻿using ClassLibrary;
+using System.Security;
 using System.Timers;
 using System.Xml.Linq;
 
@@ -152,7 +153,7 @@ public class Node : INode
                         logsToSend.Add(logs[nextIndex - 1]);
                         node.LeaderId = Id;
                         node.State = State.Follower;
-                        node.NextIndex = nextIndex;
+                        node.NextIndex = NextIndex;
                         node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
                     }
                     else
@@ -166,7 +167,7 @@ public class Node : INode
                         }
                         node.LeaderId = Id;
                         node.State = State.Follower;
-                        node.NextIndex = nextIndex;
+                        node.NextIndex = NextIndex;
                         node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
                     }
                 }
@@ -174,7 +175,6 @@ public class Node : INode
                 {
                     node.LeaderId = Id;
                     node.State = State.Follower;
-                    node.NextIndex = nextIndex;
                     node.RequestAppendEntriesRPC(Term, Id, 0, 0, logs, 0);
                 }
             }
@@ -197,22 +197,45 @@ public class Node : INode
                 {
                     logs.Add(log);
                 }
+                if (NextIndex != currentLeader.NextIndex)
+                {
+                    await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
+                    return;
+                }
                 if (currentLeader.StateMachine.Count > StateMachine.Count)
                 {
-                    var command = logs[prevLogIndex].Command;
-                    if (command is not null)
+                    var termMatch = logs.Select(x => x.Term == prevLogTerm).FirstOrDefault();
+                    if (logs.Count > 0 && termMatch)
                     {
-                        StateMachine[prevLogIndex] = command;
+                        var indexMatch = logs.Contains(logs[prevLogIndex]);
+                        if (indexMatch)
+                        {
+                            var command = logs[prevLogIndex].Command;
+                            if (command is not null)
+                            {
+                                StateMachine[prevLogIndex] = command;
+                            }
+                        }
                     }
                 }
-                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
             }
+            await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
         }
     }
 
     public async Task ConfirmAppendEntriesRPC(int term, int nextIndex)
     {
-        IncreaseCommitedLogs();
+        if (nextIndex == NextIndex)
+        {
+            IncreaseCommitedLogs();
+        }
+        else
+        {
+            if (NextIndex >= 0)
+            {
+                NextIndex--;
+            }
+        }
         await Task.CompletedTask;
     }
 

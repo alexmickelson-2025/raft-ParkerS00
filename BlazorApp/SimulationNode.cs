@@ -23,6 +23,7 @@ public class SimulationNode : INode
     public int NetworkDelay { get; set; }
     public int NextIndex { get => ((INode)InnerNode).NextIndex; set => ((INode)InnerNode).NextIndex = value; }
     public Dictionary<int, string> StateMachine { get => ((INode)InnerNode).StateMachine; set => ((INode)InnerNode).StateMachine = value; }
+    public List<Log> logs { get => ((INode)InnerNode).logs; set => ((INode)InnerNode).logs = value; }
 
     public Task CastVoteRPC(int candidateId, bool vote)
     {
