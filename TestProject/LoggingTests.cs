@@ -316,6 +316,7 @@ public class LoggingTests
         // Arrange
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
+        followerNode1.Term = 1;
         followerNode1.LeaderId = 2;
         followerNode1.NextIndex = 0;
 
@@ -337,7 +338,31 @@ public class LoggingTests
 
         // Assert
         leaderNode.NextIndex.Should().Be(1);
-        Thread.Sleep(80);
+        Thread.Sleep(100);
         await followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 1);
+    }
+
+    // Test #16
+    [Fact]
+    public void LeaderSendsHeartbeatWithLogButDoesntRecieveMajorityDoesntCommitLogs()
+    {
+        // Arrange
+        var followerNode1 = Substitute.For<INode>();
+        followerNode1.Id = 1;
+
+        var followerNode2 = Substitute.For<INode>();
+        followerNode1.Id = 3;
+
+        var leaderNode = new Node([followerNode1, followerNode2], 2);
+        //leaderNode.State = State.Leader;
+
+        // Act
+        leaderNode.BecomeLeader();
+        leaderNode.RecieveClientCommand("test");
+        Thread.Sleep(100);
+
+        // Assert
+        leaderNode.StateMachine.Count.Should().Be(0);
+        leaderNode.LeaderCommitIndex.Should().Be(0);
     }
 }
