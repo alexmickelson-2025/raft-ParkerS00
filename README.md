@@ -36,39 +36,39 @@ A follower that has not voted and is in an earlier term responds to a RequestFor
 
 [X] When a candidate wins an election, it immediately sends a heart beat.
 
-[ ] when a leader receives a client command the leader sends the log entry in the next appendentries RPC to all nodes
+[X} when a leader receives a client command the leader sends the log entry in the next appendentries RPC to all nodes
 
-[ ] when a leader receives a command from the client, it is appended to its log
+[X] when a leader receives a command from the client, it is appended to its log
 
-[ ] when a node is new, its log is empty
+[X] when a node is new, its log is empty
 
-[ ] when a leader wins an election, it initializes the nextIndex for each follower to the index just after the last one it its log
+[X] when a leader wins an election, it initializes the nextIndex for each follower to the index just after the last one it its log
 
-[ ] leaders maintain an "nextIndex" for each follower that is the index of the next log entry the leader will send to that follower
+[X] leaders maintain an "nextIndex" for each follower that is the index of the next log entry the leader will send to that follower
 
-[ ] Highest committed index from the leader is included in AppendEntries RPC's
+[X] Highest committed index from the leader is included in AppendEntries RPC's
 
-[ ] When a follower learns that a log entry is committed, it applies the entry to its local state machine
+[X] When a follower learns that a log entry is committed, it applies the entry to its local state machine
 
-[ ] when the leader has received a majority confirmation of a log, it commits it
+[X] when the leader has received a majority confirmation of a log, it commits it
 
-[ ] the leader commits logs by incrementing its committed log index
+[X] the leader commits logs by incrementing its committed log index
 
-[ ] given a follower receives an appendentries with log(s) it will add those entries to its personal log
+[X] given a follower receives an appendentries with log(s) it will add those entries to its personal log
 
-[ ] a followers response to an appendentries includes the followers term number and log entry index
+[X] a followers response to an appendentries includes the followers term number and log entry index
 
 [ ] when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
 
-[ ] given a leader node, when a log is committed, it applies it to its internal state machine
+[X] given a leader node, when a log is committed, it applies it to its internal state machine
 
-[ ] when a follower receives a heartbeat, it increases its commitIndex to match the commit index of the heartbeat
+[X] when a follower receives a heartbeat, it increases its commitIndex to match the commit index of the heartbeat
 
-[ ] When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
+[X] When sending an AppendEntries RPC, the leader includes the index and term of the entry in its log that immediately precedes the new entries
 
-[ ] when a leader sends a heartbeat with a log, but does not receive responses from a majority of nodes, the entry is uncommitted
+[X] when a leader sends a heartbeat with a log, but does not receive responses from a majority of nodes, the entry is uncommitted
 
-[ ] if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats
+[X] if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats
 
 [ ] if a leader cannot commit an entry, it does not send a response to the client
 
