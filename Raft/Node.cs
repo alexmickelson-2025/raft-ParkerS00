@@ -35,6 +35,7 @@ public class Node : INode
     public int Term { get; set; }
     public int NextIndex { get; set; }
     public int LeaderCommitIndex { get; set; }
+    public bool Paused { get; set; }
     public System.Timers.Timer Timer { get; set; } = new();
     public DateTime StartTime { get; set; }
     public State State { get; set; }
@@ -300,5 +301,25 @@ public class Node : INode
     public void SendClientConfirmation()
     {
         return;
+    }
+
+    public void Pause()
+    {
+        Paused = true;
+        Timer.Stop();
+        Timer.Dispose();
+    }
+
+    public void UnPause()
+    {
+        Paused = false;
+        if (State == State.Leader)
+        {
+            BecomeLeader();
+        }
+        if (State == State.Follower)
+        {
+            StartElectionTimer();
+        }
     }
 }

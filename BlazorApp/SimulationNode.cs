@@ -24,14 +24,23 @@ public class SimulationNode : INode
     public int NextIndex { get => ((INode)InnerNode).NextIndex; set => ((INode)InnerNode).NextIndex = value; }
     public Dictionary<int, string> StateMachine { get => ((INode)InnerNode).StateMachine; set => ((INode)InnerNode).StateMachine = value; }
     public List<Log> logs { get => ((INode)InnerNode).logs; set => ((INode)InnerNode).logs = value; }
+    public bool Paused { get => ((INode)InnerNode).Paused; set => ((INode)InnerNode).Paused = value; }
 
     public Task CastVoteRPC(int candidateId, bool vote)
     {
+        if (Paused == true)
+        {
+            return Task.CompletedTask;
+        }
         return ((INode)InnerNode).CastVoteRPC(candidateId, vote);
     }
 
     public Task ConfirmAppendEntriesRPC(int term, int nextIndex)
     {
+        if (Paused == true)
+        {
+            return Task.CompletedTask;
+        }
         return ((INode)InnerNode).ConfirmAppendEntriesRPC(term, nextIndex);
     }
 
@@ -40,14 +49,27 @@ public class SimulationNode : INode
         ((INode)InnerNode).DetermineWinner();
     }
 
+    public void Pause()
+    {
+        ((INode)InnerNode).Pause();
+    }
+
     public async Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit)
     {
+        if (Paused == true)
+        {
+            return;
+        }
         await Task.Delay(NetworkDelay);
         await ((INode)InnerNode).RequestAppendEntriesRPC(term, leaderId, prevLogIndex, prevLogTerm, entries, leaderCommit);
     }
 
     public async Task RequestVoteRPC(int termId, int candidateId)
     {
+        if (Paused == true)
+        {
+            return;
+        }
         await Task.Delay(NetworkDelay);
         await ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
     }
@@ -70,5 +92,10 @@ public class SimulationNode : INode
     public void StartElectionTimer()
     {
         ((INode)InnerNode).StartElectionTimer();
+    }
+
+    public void UnPause()
+    {
+        ((INode)InnerNode).UnPause();
     }
 }

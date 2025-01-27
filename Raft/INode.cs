@@ -10,6 +10,7 @@ public interface INode
     public int Votes { get; set; }
     public int Term { get; set; }
     public int NextIndex { get; set; }
+    public bool Paused { get; set; }
     public System.Timers.Timer Timer { get; set; }
     public DateTime StartTime { get; set; }
     public Dictionary<int, int> CurrentTermVotes { get; set; }  
@@ -25,4 +26,6 @@ public interface INode
     public Task ConfirmAppendEntriesRPC(int term, int nextIndex);
     public void DetermineWinner();
     public void SendClientConfirmation();
+    public void Pause();
+    public void UnPause();
 }

@@ -18,7 +18,7 @@ Welcome to your new app.
             NodeIntervalScalar)) seconds
             <br>
             <input type="range" id="speed" name="speed" min="1" max="150" @bind:event="oninput"
-                   @bind=NodeIntervalScalar @onchange="UpdateNodes"/>
+                   @bind=NodeIntervalScalar @onchange="UpdateNodes" />
         </label>
 
     </div>
@@ -28,7 +28,7 @@ Welcome to your new app.
             Network Delay @FormatMilliSeconds(NetworkRequestDelay) seconds
             <br>
             <input type="range" id="NetworkRequestDelay" name="NetworkRequestDelay" min="10" max="10000"
-                   @bind:event="oninput" @bind=NetworkRequestDelay @onchange="UpdateNodes"/>
+                   @bind:event="oninput" @bind=NetworkRequestDelay @onchange="UpdateNodes" />
         </label>
     </div>
 
@@ -45,6 +45,20 @@ Welcome to your new app.
                     <h3>
                         Node @node.Id
                     </h3>
+                    <div>
+                        @if (!node.Paused)
+                        {
+                            <button class="btn btn-danger" @onclick="() => {node.Pause();}">
+                                Stop
+                            </button>
+                        }
+                        @if (node.Paused)
+                        {
+                            <button class="btn btn-success" @onclick="() => {node.UnPause();}">
+                                Start
+                            </button>
+                        }
+                    </div>
                 </div>
                 <div>
                     @node.State

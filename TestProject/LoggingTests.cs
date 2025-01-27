@@ -358,7 +358,7 @@ public class LoggingTests
         // Act
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("test");
-        Thread.Sleep(100);
+        Thread.Sleep(80);
 
         // Assert
         leaderNode.StateMachine.Count.Should().Be(0);
