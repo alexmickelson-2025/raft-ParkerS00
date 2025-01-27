@@ -384,4 +384,41 @@ public class LoggingTests
         Thread.Sleep(60);
         followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
     }
+
+    // Test #19
+    [Fact]
+    public async Task NodeRecievesAppendEntriesTooFarInFutureShouldReject()
+    {
+        // Arrange
+        var followerNode = new Node(1);
+
+        // Act
+        await followerNode.RequestAppendEntriesRPC(1, 2, 2, 1, new List<Log>(), 1);
+
+        // Assert
+        followerNode.StateMachine.Count.Should().Be(0); 
+    }
+
+    // Test #20
+    [Fact]
+    public async Task NodeRecievesAppendEntriesWithNonMatchingTermAndIndexRejectUntilMatchingLogFound()
+    {
+        // Arrange
+        var followerNode = Substitute.For<INode>();
+        followerNode.Id = 1;
+        followerNode.LeaderId = 2;
+
+        var leaderNode = new Node([followerNode], 2);
+        leaderNode.Term = 2;
+        leaderNode.BecomeLeader();
+
+        // Act
+        leaderNode.RecieveClientCommand("test");
+        leaderNode.RecieveClientCommand("test 2");
+        leaderNode.SendAppendEntriesRPC(leaderNode.Term, leaderNode.NextIndex);
+
+        // Assert
+        await followerNode.Received().RequestAppendEntriesRPC(2, 2, 0, 0, Arg.Any<List<Log>>(), 2);
+        Thread.Sleep(60);
+    }
 }
