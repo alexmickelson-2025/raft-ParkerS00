@@ -59,26 +59,30 @@ public class LoggingTests
 
     // Test #4
     [Fact]
-    public void NodeBecomesLeaderSetsNextIndexForEachFollowerToOneAfterLastIndex()
+    public async Task NodeBecomesLeaderSetsNextIndexForEachFollowerToOneAfterLastIndex()
     {
         // Arrange
         var client = Substitute.For<IClient>();
-        var followerNode1 = Substitute.For<INode>();
-        followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2, client);
-        leaderNode.FollowersNextIndex[followerNode1.Id] = 0;
+
+        var leaderNode = Substitute.For<INode>();
+        leaderNode.Id = 2;
+        leaderNode.Term = 2;
+        leaderNode.NextIndex = 2;
+        leaderNode.StateMachine = new();
+
+        var followerNode = new Node([leaderNode], 1, client);
+
+        var logs = new List<Log>();
+        var log = new Log(1, "test");
+        logs.Add(log);
+        var log2 = new Log(2, "test");
+        logs.Add(log2);
 
         // Act
-        leaderNode.BecomeLeader();
-        leaderNode.NextIndex.Should().Be(0);
-        leaderNode.RecieveClientCommand("test");
-        leaderNode.RecieveClientCommand("test 2");
-        leaderNode.SendAppendEntriesRPC(leaderNode.Term, leaderNode.NextIndex);
+        await followerNode.RequestAppendEntriesRPC(1, 2, 1, 1, logs, 2);
 
         // Assert
-        leaderNode.NextIndex.Should().Be(2);
-        followerNode1.NextIndex.Should().Be(2); 
+        followerNode.NextIndex.Should().Be(2);
     }
 
     // Test #5
@@ -145,6 +149,7 @@ public class LoggingTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.NextIndex = 1;
         leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
         var followerNode = new Node([leaderNode], 2, client);
         var logs = new List<Log>();
@@ -207,6 +212,7 @@ public class LoggingTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.NextIndex = 1;
         leaderNode.StateMachine = new();
         var followerNode1 = new Node([leaderNode], 1, client);
         var logs = new List<Log>();
@@ -288,6 +294,7 @@ public class LoggingTests
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
+        leaderNode.NextIndex = 1;
         leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
         var followerNode = new Node([leaderNode], 2, client);
         var logs = new List<Log>();

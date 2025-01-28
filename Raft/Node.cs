@@ -168,7 +168,6 @@ public class Node : INode
                         }
                         node.LeaderId = Id;
                         node.State = State.Follower;
-                        node.NextIndex = NextIndex;
                         node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
                     }
                 }
@@ -194,9 +193,13 @@ public class Node : INode
                 State = State.Follower;
                 LeaderId = leaderId;
                 Term = term;
-                foreach (var log in entries)
+                if (currentLeader.NextIndex != NextIndex)
                 {
-                    logs.Add(log);
+                    foreach (var log in entries)
+                    {
+                        logs.Add(log);
+                    }
+                    NextIndex = currentLeader.NextIndex;
                 }
                 if (NextIndex != currentLeader.NextIndex)
                 {

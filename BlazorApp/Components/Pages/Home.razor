@@ -33,6 +33,24 @@ Welcome to your new app.
         </label>
     </div>
 
+    <div class="border p-3 rounded-3">
+        <label>
+            Key <input class="form-control" @bind=userInputKey />
+        </label>
+        <label>
+            Value <input class="form-control" @bind=userInputValue />
+        </label>
+        <hr>
+        @foreach (var node in Nodes)
+        {
+            <button class="btn btn-outline-primary mx-1" @onclick="() => SendCommand(node.Id)">Send to Node @node.Id</button>
+        }
+        <br>
+        <div>
+            @commandStatus
+        </div>
+    </div>
+
     @foreach (var node in Nodes)
     {
         var elapsedTime = DateTime.Now - node.StartTime;
@@ -71,6 +89,16 @@ Welcome to your new app.
                     Leader is @node.LeaderId
                 </div>
                 <div>
+                    Commit Index is @node.NextIndex
+                </div>
+                <div>
+                    @foreach (var log in node.logs)
+                    {
+                        <p> Current Term: @log.Term</p>
+                        <p> Current Command: @log.Command</p>
+                    }
+                </div>
+                <div>
                     <div class="progress" role="progressbar" aria-label="Timeout Progress"
                          aria-valuenow=@remainingTime aria-valuemin="0" aria-valuemax=@timeoutDuration>
                         <div class="progress-bar bg-dark-subtle" style="width: @percentageRemaining%;"></div>
@@ -85,6 +113,10 @@ Welcome to your new app.
     private Timer? timer;
     public int NodeIntervalScalar = 1;
     public int NetworkRequestDelay = 0;
+    string userInputKey = "";
+    string userInputValue = "";
+    string commandStatus = "";
+
 
     List<SimulationNode> Nodes = new();
 
@@ -130,7 +162,24 @@ Welcome to your new app.
             node.NetworkDelay = NetworkRequestDelay;
             node.InnerNode.MinDelay = 150 * NodeIntervalScalar;
             node.InnerNode.MaxDelay = 300 * NodeIntervalScalar;
-            //node.InnerNode.LeaderDelay = 50 * NodeIntervalScalar;
         }
     }
+
+    public void SendCommand(int destinationId)
+    {
+        commandStatus = "sending";
+        var dest = Nodes.FirstOrDefault(n => n.Id == destinationId);
+
+        if (dest is null)
+        {
+            return;
+        }
+
+        var key = userInputKey;
+        var value = userInputValue;
+
+        dest.RecieveClientCommand(value);
+        commandStatus = $"sent to node {destinationId}";
+    }
+
 }

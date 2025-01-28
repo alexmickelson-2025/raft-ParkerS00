@@ -54,6 +54,11 @@ public class SimulationNode : INode
         ((INode)InnerNode).Pause();
     }
 
+    public void RecieveClientCommand(string command)
+    {
+        ((INode)InnerNode).RecieveClientCommand(command);
+    }
+
     public async Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit)
     {
         if (Paused == true)
