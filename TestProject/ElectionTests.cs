@@ -14,7 +14,6 @@ public class RaftTests
         // Arrange
         var client = Substitute.For<IClient>();
         var followerNode = Substitute.For<INode>();
-        followerNode.LeaderId = 1;
         followerNode.Id = 2;
         var leaderNode = new Node([followerNode], 1, client);
         leaderNode.logs = new List<Log>();
@@ -43,7 +42,6 @@ public class RaftTests
         leaderNode.DetermineWinner();
 
         // Assert
-        otherNode.LeaderId.Should().Be(2);
     }
 
     // Test #3
@@ -346,7 +344,6 @@ public class RaftTests
         var candidateNode = Substitute.For<INode>();
         candidateNode.State = State.Candidate;
         candidateNode.Id = 1;
-        candidateNode.LeaderId = 2;
         candidateNode.Term = 2;
         var leaderNode = new Node([candidateNode], 2, client);
         leaderNode.Term = 1;

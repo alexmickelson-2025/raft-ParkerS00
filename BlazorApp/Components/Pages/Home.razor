@@ -35,9 +35,6 @@ Welcome to your new app.
 
     <div class="border p-3 rounded-3">
         <label>
-            Key <input class="form-control" @bind=userInputKey />
-        </label>
-        <label>
             Value <input class="form-control" @bind=userInputValue />
         </label>
         <hr>
@@ -86,7 +83,7 @@ Welcome to your new app.
                     Term @node.Term
                 </div>
                 <div>
-                    Leader is @node.LeaderId
+                    Leader is @node.InnerNode.LeaderId
                 </div>
                 <div>
                     Commit Index is @node.NextIndex
@@ -113,7 +110,6 @@ Welcome to your new app.
     private Timer? timer;
     public int NodeIntervalScalar = 1;
     public int NetworkRequestDelay = 0;
-    string userInputKey = "";
     string userInputValue = "";
     string commandStatus = "";
 
@@ -175,7 +171,6 @@ Welcome to your new app.
             return;
         }
 
-        var key = userInputKey;
         var value = userInputValue;
 
         dest.RecieveClientCommand(value);

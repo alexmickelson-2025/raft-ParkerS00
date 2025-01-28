@@ -152,7 +152,6 @@ public class Node : INode
                         List<Log> logsToSend = new();
                         FollowersNextIndex[node.Id] = nextIndex;
                         logsToSend.Add(logs[nextIndex - 1]);
-                        node.LeaderId = Id;
                         node.State = State.Follower;
                         node.NextIndex = NextIndex;
                         node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
@@ -166,14 +165,12 @@ public class Node : INode
                         {
                             logsToSend.Add(logs[i]);
                         }
-                        node.LeaderId = Id;
                         node.State = State.Follower;
                         node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
                     }
                 }
                 else
                 {
-                    node.LeaderId = Id;
                     node.State = State.Follower;
                     node.RequestAppendEntriesRPC(Term, Id, 0, 0, logs, 0);
                 }

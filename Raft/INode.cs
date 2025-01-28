@@ -5,7 +5,6 @@ namespace ClassLibrary;
 public interface INode
 {
     public int Id { get; set; }
-    public int LeaderId { get; set; }
     public State State { get; set; }
     public int Votes { get; set; }
     public int Term { get; set; }

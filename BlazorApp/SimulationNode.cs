@@ -12,7 +12,6 @@ public class SimulationNode : INode
     }
 
     public int Id { get => ((INode)InnerNode).Id; set => ((INode)InnerNode).Id = value; }
-    public int LeaderId { get => ((INode)InnerNode).LeaderId; set => ((INode)InnerNode).LeaderId = value; }
     public State State { get => ((INode)InnerNode).State; set => ((INode)InnerNode).State = value; }
     public int Votes { get => ((INode)InnerNode).Votes; set => ((INode)InnerNode).Votes = value; }
     public int Term { get => ((INode)InnerNode).Term; set => ((INode)InnerNode).Term = value; }

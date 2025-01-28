@@ -15,7 +15,6 @@ public class LoggingTests
         var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
         var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
@@ -91,12 +90,13 @@ public class LoggingTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
+
         var followerNode2 = Substitute.For<INode>();
         followerNode2.Id = 3;
-        followerNode2.LeaderId = 2;
+
         var leaderNode = new Node([followerNode2, followerNode1], 2, client);
 
         // Act
@@ -128,7 +128,6 @@ public class LoggingTests
         var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
         var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
@@ -169,9 +168,10 @@ public class LoggingTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
+
         var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
@@ -191,7 +191,6 @@ public class LoggingTests
         var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
         var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
@@ -271,9 +270,10 @@ public class LoggingTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
-        followerNode1.LeaderId = 2;
+
         var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
@@ -337,7 +337,6 @@ public class LoggingTests
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.Term = 1;
-        followerNode1.LeaderId = 2;
         followerNode1.NextIndex = 0;
 
         var leaderNode = new Node([followerNode1], 2, client);
@@ -443,9 +442,9 @@ public class LoggingTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var followerNode = Substitute.For<INode>();
         followerNode.Id = 1;
-        followerNode.LeaderId = 2;
 
         var leaderNode = new Node([followerNode], 2, client);
         leaderNode.Term = 2;
