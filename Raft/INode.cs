@@ -6,7 +6,6 @@ public interface INode
 {
     public int Id { get; set; }
     public State State { get; set; }
-    public int Votes { get; set; }
     public int Term { get; set; }
     public int NextIndex { get; set; }
     public bool Paused { get; set; }
