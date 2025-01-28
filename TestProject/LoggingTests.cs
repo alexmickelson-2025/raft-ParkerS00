@@ -12,10 +12,11 @@ public class LoggingTests
     public void LeaderSendsLogToAllOtherNodesAfterClientCommand()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -61,10 +62,11 @@ public class LoggingTests
     public void NodeBecomesLeaderSetsNextIndexForEachFollowerToOneAfterLastIndex()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
         leaderNode.FollowersNextIndex[followerNode1.Id] = 0;
 
         // Act
@@ -84,13 +86,14 @@ public class LoggingTests
     public void LeaderMaintainsNextIndexForAllFollowers()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
         var followerNode2 = Substitute.For<INode>();
         followerNode2.Id = 3;
         followerNode2.LeaderId = 2;
-        var leaderNode = new Node([followerNode2, followerNode1], 2);
+        var leaderNode = new Node([followerNode2, followerNode1], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -118,10 +121,11 @@ public class LoggingTests
     public void HighestCommitedIndexFromLeaderIsIncludedInAppendEntries()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -137,11 +141,12 @@ public class LoggingTests
     public async Task FollowerLearnsThatLeaderCommitedItCommitsToItsLocalStateMachine()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
-        var followerNode = new Node([leaderNode], 2);
+        var followerNode = new Node([leaderNode], 2, client);
         var logs = new List<Log>();
         var log = new Log(1, "test");
         logs.Add(log);
@@ -158,10 +163,11 @@ public class LoggingTests
     public void WhenLeaderHasRecievedMajorityConfirmationItCommitsLog()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -177,10 +183,11 @@ public class LoggingTests
     public void LeaderCommitsLogsByIncrementingItsCommitedLogIndex()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -196,11 +203,12 @@ public class LoggingTests
     public async Task FollowerRecievesAppendEntriesCommitLogsToPersonalLog()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new();
-        var followerNode1 = new Node([leaderNode], 1);
+        var followerNode1 = new Node([leaderNode], 1, client);
         var logs = new List<Log>();
         var log = new Log(1, "test");
         logs.Add(log);  
@@ -217,11 +225,12 @@ public class LoggingTests
     public async Task FollowersResponseIncludesTheFollowersTermNumberAndLogEntryIndex()
     {
         // Arrange 
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new();
-        var followerNode1 = new Node([leaderNode], 1);
+        var followerNode1 = new Node([leaderNode], 1, client);
         var logs = new List<Log>();
         var log = new Log(1, "test");
         logs.Add(log);
@@ -234,31 +243,32 @@ public class LoggingTests
     }
 
     // Test #12
-    //[Fact]
-    //public async Task LeaderReceivesMajorityResponsesNextHeartbeatLeader()
-    //{
-    //    // Arrange
-    //    var followerNode1 = Substitute.For<INode>();
-    //    followerNode1.Id = 1;
-    //    followerNode1.LeaderId = 2;
-    //    var leaderNode = new Node([followerNode1], 2);
+    [Fact]
+    public async Task LeaderReceivesMajorityResponsesLeaderSendConfirmation()
+    {
+        // Arrange
+        var client = Substitute.For<IClient>();
+        var followerNode = Substitute.For<INode>();
+        var leaderNode = new Node([followerNode], 2, client);
+        leaderNode.RecieveClientCommand("test");
 
-    //    // Act
-    //    await leaderNode.ConfirmAppendEntriesRPC(1, 1);
+        // Act
+        await leaderNode.ConfirmAppendEntriesRPC(1, 1);
 
-    //    // Assert
-
-    //}
+        // Assert
+        await client.Received().ReceiveNodeMessage();
+    }
 
     // Test #13
     [Fact]
     public void LeaderWhenCommitsLogsToStateMachine()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.LeaderId = 2;
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -274,11 +284,12 @@ public class LoggingTests
     public async Task AfterLeaderNodeCommittsFollowerNodesCommitOnNextHeartbeat()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
-        var followerNode = new Node([leaderNode], 2);
+        var followerNode = new Node([leaderNode], 2, client);
         var logs = new List<Log>();
         var log = new Log(1, "test");
         logs.Add(log);
@@ -295,11 +306,12 @@ public class LoggingTests
     public async Task FollowerDoesNotFindEntryInItsLogWithSameIndexAndTerm()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" }, { 2, "test 2" } };
-        var followerNode = new Node([leaderNode], 2);
+        var followerNode = new Node([leaderNode], 2, client);
 
         // Act
         await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, new List<Log>(), 1);
@@ -314,13 +326,14 @@ public class LoggingTests
     public async Task IfFollowerRejectsLeaderDecrementsNextIndexAndTriesAgain()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         followerNode1.Term = 1;
         followerNode1.LeaderId = 2;
         followerNode1.NextIndex = 0;
 
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
         leaderNode.NextIndex = 2;
         leaderNode.Term = 1;
         leaderNode.State = State.Leader;
@@ -347,13 +360,14 @@ public class LoggingTests
     public void LeaderSendsHeartbeatWithLogButDoesntRecieveMajorityDoesntCommitLogs()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
 
         var followerNode2 = Substitute.For<INode>();
         followerNode1.Id = 3;
 
-        var leaderNode = new Node([followerNode1, followerNode2], 2);
+        var leaderNode = new Node([followerNode1, followerNode2], 2, client);
 
         // Act
         leaderNode.BecomeLeader();
@@ -370,10 +384,11 @@ public class LoggingTests
     public void IfLeaderDoesntRecieveResponseFromFollowerLeaderContinuesToSendTheLogEntriesInHearbeats()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
 
-        var leaderNode = new Node([followerNode1], 2);
+        var leaderNode = new Node([followerNode1], 2, client);
         leaderNode.BecomeLeader();
 
         // Act
@@ -383,6 +398,22 @@ public class LoggingTests
         followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
         Thread.Sleep(60);
         followerNode1.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+    }
+
+    // Test #18
+    [Fact]
+    public void LeaderCannotCommitDoesntSendConfirmationToClient()
+    {
+        // Arrange
+        var client = Substitute.For<IClient>();
+        var followerNode = Substitute.For<INode>();
+        var leaderNode = new Node([followerNode], 2, client);
+
+        // Act
+        leaderNode.BecomeLeader();
+
+        // Assert
+        client.DidNotReceive().ReceiveNodeMessage();
     }
 
     // Test #19
@@ -404,21 +435,20 @@ public class LoggingTests
     public async Task NodeRecievesAppendEntriesWithNonMatchingTermAndIndexRejectUntilMatchingLogFound()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode = Substitute.For<INode>();
         followerNode.Id = 1;
         followerNode.LeaderId = 2;
 
-        var leaderNode = new Node([followerNode], 2);
+        var leaderNode = new Node([followerNode], 2, client);
         leaderNode.Term = 2;
-        leaderNode.BecomeLeader();
-
-        // Act
         leaderNode.RecieveClientCommand("test");
         leaderNode.RecieveClientCommand("test 2");
-        leaderNode.SendAppendEntriesRPC(leaderNode.Term, leaderNode.NextIndex);
+
+        // Act
+        leaderNode.BecomeLeader();
 
         // Assert
         await followerNode.Received().RequestAppendEntriesRPC(2, 2, 0, 0, Arg.Any<List<Log>>(), 2);
-        Thread.Sleep(60);
     }
 }

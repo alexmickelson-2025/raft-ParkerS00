@@ -12,10 +12,11 @@ public class RaftTests
     public async Task WhenALeaderIsActiveItSendsAHeartbeatWithin50()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode = Substitute.For<INode>();
         followerNode.LeaderId = 1;
         followerNode.Id = 2;
-        var leaderNode = new Node([followerNode], 1);
+        var leaderNode = new Node([followerNode], 1, client);
         leaderNode.logs = new List<Log>();
         leaderNode.BecomeLeader();
         
@@ -31,9 +32,10 @@ public class RaftTests
     public void ANodeRecievesMessageItKnowsOtherNodeIsTheLeader()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var otherNode = Substitute.For<INode>();
         otherNode.Id = 1;
-        var leaderNode = new Node([otherNode], 2);
+        var leaderNode = new Node([otherNode], 2, client);
 
         // Act
         leaderNode.StartElection();
@@ -78,12 +80,13 @@ public class RaftTests
     public void WhenElectionTimeIsResetItIsRandomBetween150and300()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var testNode1 = Substitute.For<INode>();
         testNode1.Id = 1;
         var testNode2 = Substitute.For<INode>();
         testNode2.Id = 2;
         List<INode> otherNodes = new List<INode>() { testNode1, testNode2 };
-        var testNode = new Node(otherNodes, 3);
+        var testNode = new Node(otherNodes, 3, client);
         var initialInterval = testNode.Timer.Interval;
         var collisions = 0;
 
@@ -124,11 +127,12 @@ public class RaftTests
     public async Task FollowerGetsAppendEntriesMessageElectionTimerResets()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new();
-        var followerNode = new Node([leaderNode], 1);
+        var followerNode = new Node([leaderNode], 1, client);
         followerNode.LeaderId = 2;
 
         // Act
@@ -161,11 +165,12 @@ public class RaftTests
     public async Task UnresponsiveNodeStillGiveCandidateLeadershipStatus()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode1 = Substitute.For<INode>();
         followerNode1.Id = 1;
         var followerNode2 = Substitute.For<INode>();
         followerNode2.Id = 2;
-        var leaderNode = new Node([followerNode1, followerNode2], 3);
+        var leaderNode = new Node([followerNode1, followerNode2], 3, client);
 
         // Act
         leaderNode.StartElection();
@@ -181,9 +186,10 @@ public class RaftTests
     public async Task FollowerHasntVotedYetRespondsWithYesForRequestToVote()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        var followerNode = new Node([leaderNode], 1);
+        var followerNode = new Node([leaderNode], 1, client);
 
         // Act
         await followerNode.RequestVoteRPC(1, 2);
@@ -212,12 +218,13 @@ public class RaftTests
     public async Task CandidateReceivesMessageFromNodeWithLaterTermShouldBecomeFollower()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.State = State.Leader;
         leaderNode.Term = 2;
         leaderNode.StateMachine = new();
-        var candidateNode = new Node([leaderNode], 1);
+        var candidateNode = new Node([leaderNode], 1, client);
         candidateNode.State = State.Candidate;
         candidateNode.Term = 1;
         candidateNode.LeaderId = 2;
@@ -234,12 +241,13 @@ public class RaftTests
     public async Task CandidateReceivesMessageFromNodeWithAnEqualTermShouldBecomeFollower()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.State = State.Leader;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new();
-        var candidateNode = new Node([leaderNode], 1);
+        var candidateNode = new Node([leaderNode], 1, client);
         candidateNode.State = State.Candidate;
         candidateNode.Term = 1;
         candidateNode.LeaderId = 2;
@@ -256,9 +264,10 @@ public class RaftTests
     public async Task FollowerWontVoteTwiceForSameTerm()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        var followerNode = new Node([leaderNode], 1);
+        var followerNode = new Node([leaderNode], 1, client);
 
         // Act
         await followerNode.RequestVoteRPC(1, 2);
@@ -273,9 +282,10 @@ public class RaftTests
     public async Task FutureTermMakesThemVoteYes()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        var followerNode = new Node([leaderNode], 1);
+        var followerNode = new Node([leaderNode], 1, client);
 
         // Act
         await followerNode.RequestVoteRPC(1, 2);
@@ -290,12 +300,13 @@ public class RaftTests
     public void WhenElectionTimerExpiresInsideElectionAnotherElectionStarts()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var testNode1 = Substitute.For<INode>();
         testNode1.Id = 1;
         var testNode2 = Substitute.For<INode>();
         testNode2.Id = 2;
         List<INode> otherNodes = new List<INode>() { testNode1, testNode2 };
-        var testNode = new Node(otherNodes, 3);
+        var testNode = new Node(otherNodes, 3, client);
 
         // Act
         testNode.StartElection();
@@ -311,11 +322,12 @@ public class RaftTests
     public async Task FollowerNodeRecievesAnAppendEntriesRequestItResponds()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
         leaderNode.Term = 1;
         leaderNode.StateMachine = new();
-        var followerNode = new Node([leaderNode], 1);
+        var followerNode = new Node([leaderNode], 1, client);
         followerNode.LeaderId = 2;
 
         // Act
@@ -330,12 +342,13 @@ public class RaftTests
     public async Task CandidateRecievesOldAppendEntriesFromPreviousTermRejects()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var candidateNode = Substitute.For<INode>();
         candidateNode.State = State.Candidate;
         candidateNode.Id = 1;
         candidateNode.LeaderId = 2;
         candidateNode.Term = 2;
-        var leaderNode = new Node([candidateNode], 2);
+        var leaderNode = new Node([candidateNode], 2, client);
         leaderNode.Term = 1;
 
         // Act
@@ -350,9 +363,10 @@ public class RaftTests
     public void WhenACandidateWinsAnElectionItImmediatelySendsAHeartbeat()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var otherNode = Substitute.For<INode>();
         otherNode.Id = 1;
-        var leaderNode = new Node([otherNode], 2);
+        var leaderNode = new Node([otherNode], 2, client);
 
         // Act
         leaderNode.StartElection();

@@ -11,11 +11,12 @@ public class PausingTests
     public void LeaderWithElectionLoopGetsPausedFollowerDontGetAHeartbeat()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode = Substitute.For<INode>();
         followerNode.Id = 1;
         followerNode.LeaderId = 2;
 
-        var leaderNode = new Node([followerNode], 2);
+        var leaderNode = new Node([followerNode], 2, client);
         leaderNode.BecomeLeader();
 
         // Act
@@ -30,11 +31,12 @@ public class PausingTests
     public void LeaderGetsPausedThenGetsUnpausedAndSendsHeartbeatAgain()
     {
         // Arrange
+        var client = Substitute.For<IClient>();
         var followerNode = Substitute.For<INode>();
         followerNode.Id = 1;
         followerNode.LeaderId = 2;
 
-        var leaderNode = new Node([followerNode], 2);
+        var leaderNode = new Node([followerNode], 2, client);
         leaderNode.BecomeLeader();
 
         // Act

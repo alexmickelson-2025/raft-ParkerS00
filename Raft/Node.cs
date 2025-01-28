@@ -1,13 +1,11 @@
 ﻿using ClassLibrary;
-using System.Security;
 using System.Timers;
-using System.Xml.Linq;
 
 namespace Raft;
 
 public class Node : INode
 {
-    public Node(List<INode> otherNodes, int id)
+    public Node(List<INode> otherNodes, int id, IClient client)
     {
         State = State.Follower;
         Votes = 0;
@@ -15,6 +13,7 @@ public class Node : INode
         NextIndex = 0;
         OtherNodes = otherNodes;
         Id = id;
+        CurrentClient = client;
         StartElectionTimer();
     }
 
@@ -48,6 +47,7 @@ public class Node : INode
     public int MaxDelay { get; set; } = 300;
     public int MinDelay { get; set; } = 150;
     public int LeaderDelay { get; set; } = 50;
+    public IClient CurrentClient { get; set; }
 
     public void StartElection()
     {
@@ -300,6 +300,7 @@ public class Node : INode
 
     public void SendClientConfirmation()
     {
+        CurrentClient.ReceiveNodeMessage();
         return;
     }
 

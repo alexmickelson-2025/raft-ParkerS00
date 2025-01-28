@@ -1,4 +1,5 @@
-﻿@using Raft
+﻿@using ClassLibrary
+@using Raft
 @rendermode InteractiveServer
 @page "/"
 
@@ -89,9 +90,9 @@ Welcome to your new app.
 
     void startSimulation()
     {
-        var node1 = new Node([], 1);
-        var node2 = new Node([], 2);
-        var node3 = new Node([], 3);
+        var node1 = new Node([], 1, new Client());
+        var node2 = new Node([], 2, new Client());
+        var node3 = new Node([], 3, new Client());
 
 
         var simulation1 = new SimulationNode(node1);
