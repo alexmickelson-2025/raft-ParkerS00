@@ -58,7 +58,7 @@ A follower that has not voted and is in an earlier term responds to a RequestFor
 
 [X] a followers response to an appendentries includes the followers term number and log entry index
 
-[ ] when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
+[X] when a leader receives a majority responses from the clients after a log replication heartbeat, the leader sends a confirmation response to the client
 
 [X] given a leader node, when a log is committed, it applies it to its internal state machine
 
@@ -70,8 +70,8 @@ A follower that has not voted and is in an earlier term responds to a RequestFor
 
 [X] if a leader does not response from a follower, the leader continues to send the log entries in subsequent heartbeats
 
-[ ] if a leader cannot commit an entry, it does not send a response to the client
+[X] if a leader cannot commit an entry, it does not send a response to the client
 
-[ ] if a node receives an appendentries with a logs that are too far in the future from your local state, you should reject the appendentries
+[X] if a node receives an appendentries with a logs that are too far in the future from your local state, you should reject the appendentries
 
-[ ] if a node receives and appendentries with a term and index that do not match, you will reject the appendentry until you find a matching log 
+[X] if a node receives and appendentries with a term and index that do not match, you will reject the appendentry until you find a matching log 
