@@ -12,14 +12,8 @@ public class SimulationNode : INode
     }
 
     public int Id { get => ((INode)InnerNode).Id; set => ((INode)InnerNode).Id = value; }
-    public Dictionary<int, int> CurrentTermVotes { get => ((INode)InnerNode).CurrentTermVotes; set => ((INode)InnerNode).CurrentTermVotes = value; }
-    public List<INode> OtherNodes { get => ((INode)InnerNode).OtherNodes; set => ((INode)InnerNode).OtherNodes = value; }
-    public DateTime StartTime { get => ((INode)InnerNode).StartTime; set => ((INode)InnerNode).StartTime = value; }
     public int NetworkDelay { get; set; }
-    public Dictionary<int, string> StateMachine { get => ((INode)InnerNode).StateMachine; set => ((INode)InnerNode).StateMachine = value; }
-    public List<Log> logs { get => ((INode)InnerNode).logs; set => ((INode)InnerNode).logs = value; }
-    public bool Paused { get => ((INode)InnerNode).Paused; set => ((INode)InnerNode).Paused = value; }
-
+    public bool Paused { get; set;  }
     public Task CastVoteRPC(int candidateId, bool vote)
     {
         if (Paused == true)
@@ -36,11 +30,6 @@ public class SimulationNode : INode
             return Task.CompletedTask;
         }
         return ((INode)InnerNode).ConfirmAppendEntriesRPC(term, nextIndex);
-    }
-
-    public void DetermineWinner()
-    {
-        ((INode)InnerNode).DetermineWinner();
     }
 
     public void Pause()
@@ -71,26 +60,6 @@ public class SimulationNode : INode
         }
         await Task.Delay(NetworkDelay);
         await ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
-    }
-
-    public void SendAppendEntriesRPC(int termId, int nextIndex)
-    {
-        ((INode)InnerNode).SendAppendEntriesRPC(termId, nextIndex);
-    }
-
-    public void SendClientConfirmation()
-    {
-        ((INode)InnerNode).SendClientConfirmation();
-    }
-
-    public void StartElection()
-    {
-        ((INode)InnerNode).StartElection();
-    }
-
-    public void StartElectionTimer()
-    {
-        ((INode)InnerNode).StartElectionTimer();
     }
 
     public void UnPause()

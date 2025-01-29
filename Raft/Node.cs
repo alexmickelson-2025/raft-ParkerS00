@@ -142,7 +142,6 @@ public class Node : INode
         if (numberOfUpToDateNodes >= MajorityVote && logs.Count > 0)
         {
             LeaderCommitIndex = NextIndex;
-            //NextIndex++;
             var command = logs[LeaderCommitIndex - 1].Command;
             if (command is not null)
             {
@@ -215,7 +214,7 @@ public class Node : INode
                         logs.Add(log);
                     }
                 }
-                if (currentLeader.StateMachine.Count > StateMachine.Count)
+                if (leaderCommit > StateMachine.Count)
                 {
                     var termMatch = logs.Select(x => x.Term == prevLogTerm).FirstOrDefault();
                     if (logs.Count > 0 && termMatch)

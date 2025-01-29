@@ -65,7 +65,6 @@ public class LoggingTests
 
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.StateMachine = new();
 
         var followerNode = new Node([leaderNode], 1, client);
 
@@ -145,7 +144,6 @@ public class LoggingTests
 
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
 
         var followerNode = new Node([leaderNode], 2, client);
 
@@ -209,7 +207,6 @@ public class LoggingTests
 
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.StateMachine = new();
 
         var followerNode1 = new Node([leaderNode], 1, client);
         var logs = new List<Log>();
@@ -232,7 +229,6 @@ public class LoggingTests
 
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.StateMachine = new();
 
         var followerNode1 = new Node([leaderNode], 1, client);
         var logs = new List<Log>();
@@ -293,7 +289,6 @@ public class LoggingTests
 
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" } };
 
         var followerNode = new Node([leaderNode], 2, client);
         var logs = new List<Log>();
@@ -316,7 +311,6 @@ public class LoggingTests
 
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.StateMachine = new Dictionary<int, string>() { { 1, "test" }, { 2, "test 2" } };
 
         var followerNode = new Node([leaderNode], 2, client);
 

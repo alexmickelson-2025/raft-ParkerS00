@@ -50,7 +50,7 @@ Welcome to your new app.
 
     @foreach (var node in Nodes)
     {
-        var elapsedTime = DateTime.Now - node.StartTime;
+        var elapsedTime = DateTime.Now - node.InnerNode.StartTime;
         var timeoutDuration = node.InnerNode.Timer.Interval;
         var remainingTime = timeoutDuration - elapsedTime.TotalMilliseconds;
         var percentageRemaining = Math.Max(0, (int)(100 * remainingTime / timeoutDuration));
@@ -89,7 +89,7 @@ Welcome to your new app.
                     Commit Index is @node.InnerNode.NextIndex
                 </div>
                 <div>
-                    @foreach (var log in node.logs)
+                    @foreach (var log in node.InnerNode.logs)
                     {
                         <p> Current Term: @log.Term</p>
                         <p> Current Command: @log.Command</p>
