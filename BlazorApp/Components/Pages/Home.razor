@@ -51,7 +51,7 @@ Welcome to your new app.
     @foreach (var node in Nodes)
     {
         var elapsedTime = DateTime.Now - node.StartTime;
-        var timeoutDuration = node.Timer.Interval;
+        var timeoutDuration = node.InnerNode.Timer.Interval;
         var remainingTime = timeoutDuration - elapsedTime.TotalMilliseconds;
         var percentageRemaining = Math.Max(0, (int)(100 * remainingTime / timeoutDuration));
 
@@ -77,16 +77,16 @@ Welcome to your new app.
                     </div>
                 </div>
                 <div>
-                    @node.State
+                    @node.InnerNode.State
                 </div>
                 <div>
-                    Term @node.Term
+                    Term @node.InnerNode.Term
                 </div>
                 <div>
                     Leader is @node.InnerNode.LeaderId
                 </div>
                 <div>
-                    Commit Index is @node.NextIndex
+                    Commit Index is @node.InnerNode.NextIndex
                 </div>
                 <div>
                     @foreach (var log in node.logs)
@@ -155,7 +155,7 @@ Welcome to your new app.
     {
         foreach (var node in Nodes)
         {
-            node.NetworkDelay = NetworkRequestDelay;
+            node.InnerNode.LeaderDelay = NetworkRequestDelay;
             node.InnerNode.MinDelay = 150 * NodeIntervalScalar;
             node.InnerNode.MaxDelay = 300 * NodeIntervalScalar;
         }

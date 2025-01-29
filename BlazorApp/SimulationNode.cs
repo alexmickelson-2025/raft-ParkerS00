@@ -12,14 +12,10 @@ public class SimulationNode : INode
     }
 
     public int Id { get => ((INode)InnerNode).Id; set => ((INode)InnerNode).Id = value; }
-    public State State { get => ((INode)InnerNode).State; set => ((INode)InnerNode).State = value; }
-    public int Term { get => ((INode)InnerNode).Term; set => ((INode)InnerNode).Term = value; }
-    public System.Timers.Timer Timer { get => ((INode)InnerNode).Timer; set => ((INode)InnerNode).Timer = value; }
     public Dictionary<int, int> CurrentTermVotes { get => ((INode)InnerNode).CurrentTermVotes; set => ((INode)InnerNode).CurrentTermVotes = value; }
     public List<INode> OtherNodes { get => ((INode)InnerNode).OtherNodes; set => ((INode)InnerNode).OtherNodes = value; }
     public DateTime StartTime { get => ((INode)InnerNode).StartTime; set => ((INode)InnerNode).StartTime = value; }
     public int NetworkDelay { get; set; }
-    public int NextIndex { get => ((INode)InnerNode).NextIndex; set => ((INode)InnerNode).NextIndex = value; }
     public Dictionary<int, string> StateMachine { get => ((INode)InnerNode).StateMachine; set => ((INode)InnerNode).StateMachine = value; }
     public List<Log> logs { get => ((INode)InnerNode).logs; set => ((INode)InnerNode).logs = value; }
     public bool Paused { get => ((INode)InnerNode).Paused; set => ((INode)InnerNode).Paused = value; }

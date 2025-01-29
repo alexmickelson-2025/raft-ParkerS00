@@ -128,13 +128,12 @@ public class RaftTests
         var client = Substitute.For<IClient>();
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.Term = 1;
         leaderNode.StateMachine = new();
         var followerNode = new Node([leaderNode], 1, client);
         followerNode.LeaderId = 2;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await followerNode.RequestAppendEntriesRPC(1, leaderNode.Id, 0, 0, new List<Log>(), 0);
         Thread.Sleep(100);
 
         // Assert
@@ -217,18 +216,18 @@ public class RaftTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.State = State.Leader;
-        leaderNode.Term = 2;
         leaderNode.StateMachine = new();
+
         var candidateNode = new Node([leaderNode], 1, client);
         candidateNode.State = State.Candidate;
         candidateNode.Term = 1;
         candidateNode.LeaderId = 2;
 
         // Act
-        await candidateNode.RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await candidateNode.RequestAppendEntriesRPC(2, leaderNode.Id, 0, 0, new List<Log>(), 0);
 
         // Assert
         candidateNode.State.Should().Be(State.Follower);
@@ -240,18 +239,18 @@ public class RaftTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.State = State.Leader;
-        leaderNode.Term = 1;
         leaderNode.StateMachine = new();
+
         var candidateNode = new Node([leaderNode], 1, client);
         candidateNode.State = State.Candidate;
         candidateNode.Term = 1;
         candidateNode.LeaderId = 2;
 
         // Act
-        await candidateNode.RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await candidateNode.RequestAppendEntriesRPC(1, leaderNode.Id, 0, 0, new List<Log>(), 0);
 
         // Assert
         candidateNode.State.Should().Be(State.Follower);
@@ -321,18 +320,19 @@ public class RaftTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var leaderNode = Substitute.For<INode>();
         leaderNode.Id = 2;
-        leaderNode.Term = 1;
         leaderNode.StateMachine = new();
+
         var followerNode = new Node([leaderNode], 1, client);
         followerNode.LeaderId = 2;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await followerNode.RequestAppendEntriesRPC(1, leaderNode.Id, 0, 0, new List<Log>(), 0);
 
         // Assert
-        await leaderNode.Received().ConfirmAppendEntriesRPC(leaderNode.Term, leaderNode.NextIndex);
+        await leaderNode.Received().ConfirmAppendEntriesRPC(1, 1);
     }
 
     // Test #18
@@ -341,15 +341,15 @@ public class RaftTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var candidateNode = Substitute.For<INode>();
-        candidateNode.State = State.Candidate;
         candidateNode.Id = 1;
-        candidateNode.Term = 2;
+
         var leaderNode = new Node([candidateNode], 2, client);
         leaderNode.Term = 1;
 
         // Act
-        leaderNode.SendAppendEntriesRPC(candidateNode.Term, candidateNode.NextIndex);
+        leaderNode.SendAppendEntriesRPC(2, 1);
 
         // Assert
         await candidateNode.DidNotReceive().RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0);

@@ -11,6 +11,7 @@ public class Node : INode
         Votes = 0;
         Term = 1;
         NextIndex = 0;
+        LeaderCommitIndex = 0;
         OtherNodes = otherNodes;
         Id = id;
         CurrentClient = client;
@@ -23,6 +24,7 @@ public class Node : INode
         Votes = 0;
         Term = 1;
         NextIndex = 0;
+        LeaderCommitIndex = 0;
         OtherNodes = new List<INode>();
         Id = id;
         StartElectionTimer();
@@ -34,6 +36,8 @@ public class Node : INode
     public int Term { get; set; }
     public int NextIndex { get; set; }
     public int LeaderCommitIndex { get; set; }
+    public int PreviousLogIndex { get; set; }
+    public int PreviousLogTerm { get; set; }
     public bool Paused { get; set; }
     public System.Timers.Timer Timer { get; set; } = new();
     public DateTime StartTime { get; set; }
@@ -109,9 +113,9 @@ public class Node : INode
         }
     }
 
-    public void IncreaseCommitedLogs()
+    public void IncreaseCommitedLogs(int nextIndex, int termId)
     {
-        if (LeaderCommitIndex == NextIndex)
+        if (LeaderCommitIndex == nextIndex)
         {
             return;
         }
@@ -119,14 +123,15 @@ public class Node : INode
         int numberOfUpToDateNodes = 1;
         foreach (var node in OtherNodes)
         {
-            if (node.NextIndex == NextIndex)
+            if (nextIndex == NextIndex && termId == Term)
             {
                 numberOfUpToDateNodes++;
             }
         }
-        if (numberOfUpToDateNodes >= MajorityVote)
+        if (numberOfUpToDateNodes >= MajorityVote && logs.Count > 0)
         {
             LeaderCommitIndex = NextIndex;
+            //NextIndex++;
             var command = logs[LeaderCommitIndex - 1].Command;
             if (command is not null)
             {
@@ -138,7 +143,7 @@ public class Node : INode
 
     public void SendAppendEntriesRPC(int termId, int nextIndex)
     {
-        IncreaseCommitedLogs();
+        IncreaseCommitedLogs(nextIndex, termId);
         StartTime = DateTime.Now;
         if (Term >= termId && State == State.Leader)
         {
@@ -151,28 +156,28 @@ public class Node : INode
                     {
                         List<Log> logsToSend = new();
                         FollowersNextIndex[node.Id] = nextIndex;
-                        logsToSend.Add(logs[nextIndex - 1]);
-                        node.State = State.Follower;
-                        node.NextIndex = NextIndex;
-                        node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
+                        logsToSend.Add(logs[NextIndex - 1]);
+                        PreviousLogIndex = nextIndex - 1;
+                        PreviousLogTerm = Term;
+
+                        node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logsToSend, LeaderCommitIndex);
                     }
                     else
                     {
                         List<Log> logsToSend = new();
-                        var logsBehind = nextIndex - node.NextIndex;
-                        FollowersNextIndex[node.Id] = nextIndex - logsBehind;
-                        for (int i = node.NextIndex; i < nextIndex; i++)
+                        FollowersNextIndex[node.Id] = NextIndex - nextIndex;
+                        for (int i = logsToSend.Count; i < nextIndex; i++)
                         {
                             logsToSend.Add(logs[i]);
+                            PreviousLogIndex = nextIndex - (i + 1);
                         }
-                        node.State = State.Follower;
-                        node.RequestAppendEntriesRPC(Term, Id, 0, 0, logsToSend, LeaderCommitIndex);
+                        PreviousLogTerm = Term;
+                        node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logsToSend, LeaderCommitIndex);
                     }
                 }
                 else
                 {
-                    node.State = State.Follower;
-                    node.RequestAppendEntriesRPC(Term, Id, 0, 0, logs, 0);
+                    node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, LeaderCommitIndex);
                 }
             }
         }
@@ -184,24 +189,20 @@ public class Node : INode
 
         if (currentLeader is not null)
         {
-            if (currentLeader.Term >= term && currentLeader.Id == leaderId)
+            if (term >= Term && currentLeader.Id == leaderId)
             {
                 StartElectionTimer();
                 State = State.Follower;
                 LeaderId = leaderId;
                 Term = term;
-                if (currentLeader.NextIndex != NextIndex)
+                NextIndex = prevLogIndex + 1;
+
+                if (prevLogIndex != NextIndex)
                 {
                     foreach (var log in entries)
                     {
                         logs.Add(log);
                     }
-                    NextIndex = currentLeader.NextIndex;
-                }
-                if (NextIndex != currentLeader.NextIndex)
-                {
-                    await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
-                    return;
                 }
                 if (currentLeader.StateMachine.Count > StateMachine.Count)
                 {
@@ -219,6 +220,11 @@ public class Node : INode
                         }
                     }
                 }
+                if (NextIndex != prevLogIndex)
+                {
+                    await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
+                    return;
+                }
             }
             await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
         }
@@ -228,11 +234,11 @@ public class Node : INode
     {
         if (nextIndex == NextIndex)
         {
-            IncreaseCommitedLogs();
+            IncreaseCommitedLogs(nextIndex, term);
         }
         else
         {
-            if (NextIndex >= 0)
+            if (nextIndex >= 0)
             {
                 NextIndex--;
             }

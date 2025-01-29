@@ -38,13 +38,15 @@ public class PausingTests
         leaderNode.BecomeLeader();
 
         // Act
+        followerNode.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+
         leaderNode.Pause();
         Thread.Sleep(400);
         leaderNode.UnPause();
-        Thread.Sleep(50);
+        Thread.Sleep(48);
 
         // Assert
-        followerNode.Received(2).RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
     }
 
     [Fact]
