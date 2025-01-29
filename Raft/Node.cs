@@ -18,6 +18,17 @@ public class Node : INode
         StartElectionTimer();
     }
 
+    public Node(List<INode> otherNodes)
+    {
+        State = State.Follower;
+        Votes = 0;
+        Term = 1;
+        NextIndex = 0;
+        LeaderCommitIndex = 0;
+        OtherNodes = otherNodes;
+        StartElectionTimer();
+    }
+
     public Node(int id)
     {
         State = State.Follower;
