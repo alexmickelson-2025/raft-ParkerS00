@@ -23,7 +23,7 @@ public class PausingTests
         Thread.Sleep(400);
 
         // Assert
-        followerNode.Received(1).RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode.Received(1).RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class PausingTests
         leaderNode.BecomeLeader();
 
         // Act
-        followerNode.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
 
         leaderNode.Pause();
         Thread.Sleep(400);
@@ -46,7 +46,7 @@ public class PausingTests
         Thread.Sleep(48);
 
         // Assert
-        followerNode.Received().RequestAppendEntriesRPC(1, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
     }
 
     [Fact]

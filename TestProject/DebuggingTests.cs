@@ -44,7 +44,7 @@ public class DebuggingTests
     }
 
     [Fact]
-    public void WhenLeaderSendsHeartbeatWithOneLogCommitIndexShouldGoUpTo1()
+    public async Task WhenLeaderSendsHeartbeatWithOneLogCommitIndexShouldGoUpTo1()
     {
         // Arrange
         var client = Substitute.For<IClient>();
@@ -57,7 +57,7 @@ public class DebuggingTests
         // Act
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
-        Thread.Sleep(70);
+        await leaderNode.ConfirmAppendEntriesRPC(0, 1, true, 1);
 
         // Assert
         leaderNode.CommitIndex.Should().Be(1);
@@ -113,27 +113,30 @@ public class DebuggingTests
         };
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 0);
+        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 1, logs, 0);
 
         // Assert
         followerNode.logs.Count().Should().Be(1);
         followerNode.PreviousLogIndex.Should().Be(0);
+        followerNode.PreviousLogTerm.Should().Be(1);
 
         log = new Log(1, "key 2", "value 2");
         logs[0] = log;
 
-        await followerNode.RequestAppendEntriesRPC(2, 2, 1, 1, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(2, 2, 0, 1, logs, 1);
 
         followerNode.logs.Count.Should().Be(2);
-        followerNode.PreviousLogIndex.Should().Be(1);
+        followerNode.PreviousLogIndex.Should().Be(0);
+        followerNode.PreviousLogTerm.Should().Be(1);
 
         log = new Log(2, "key 3", "value 3");
         logs[0] = log;
 
-        await followerNode.RequestAppendEntriesRPC(2, 2, 2, 2, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(2, 2, 1, 1, logs, 1);
 
         followerNode.logs.Count.Should().Be(3);
-        followerNode.PreviousLogIndex.Should().Be(2);
+        followerNode.PreviousLogIndex.Should().Be(1);
+        followerNode.PreviousLogTerm.Should().Be(1);
 
     }
 }

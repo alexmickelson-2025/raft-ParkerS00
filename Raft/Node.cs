@@ -9,7 +9,7 @@ public class Node : INode
     {
         State = State.Follower;
         Votes = 0;
-        Term = 1;
+        Term = 0;
         CommitIndex = 0;
         OtherNodes = otherNodes;
         Id = id;
@@ -21,7 +21,7 @@ public class Node : INode
     {
         State = State.Follower;
         Votes = 0;
-        Term = 1;
+        Term = 0;
         CommitIndex = 0;
         OtherNodes = otherNodes;
         StartElectionTimer();
@@ -31,7 +31,7 @@ public class Node : INode
     {
         State = State.Follower;
         Votes = 0;
-        Term = 1;
+        Term = 0;
         CommitIndex = 0;
         OtherNodes = new List<INode>();
         Id = id;
@@ -64,10 +64,11 @@ public class Node : INode
 
     public void StartElection()
     {
-        if (State == State.Leader)
+        if (Paused || State == State.Leader)
         {
             return;
         }
+
         Timer.Stop();
         Timer.Dispose();
         State = State.Candidate;
@@ -80,10 +81,11 @@ public class Node : INode
 
     public void StartElectionTimer()
     {
-        if (State == State.Leader)
+        if (Paused || State == State.Leader)
         {
             return;
         }
+
         Timer.Stop();
         Timer.Dispose();
         Timer = new(Random.Shared.Next(MinDelay, MaxDelay));
@@ -125,7 +127,7 @@ public class Node : INode
 
     public void IncreaseCommitedLogs(int nextIndexToCommit)
     {
-        if (CommitIndex == NextIndex || State == State.Follower)
+        if (CommitIndex == NextIndex || State == State.Follower || State == State.Candidate)
         {
             return;
         }
@@ -151,6 +153,8 @@ public class Node : INode
         {
             if (logs.Count >= 1)
             {
+                PreviousLogIndex = NextIndex - 1;
+                PreviousLogTerm = logs[NextIndex - 1].Term; 
                 node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex);
             }
             else
@@ -186,14 +190,18 @@ public class Node : INode
                 IncreaseFollowerCommitedLogs(leaderCommit);
             }
 
-            if (prevLogIndex == 0 && prevLogTerm == 0)
+            if (logs.Count < 1 && prevLogIndex == 0 && (prevLogTerm == 0 || prevLogTerm == 1))
             {
                 logs.AddRange(entries);
+                PreviousLogIndex = 0;
+                PreviousLogTerm = prevLogTerm;
                 await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
             }
             else if (logs.Count > prevLogIndex && logs[prevLogIndex] is not null && logs.Last().Term == prevLogTerm) 
             {
                 logs.AddRange(entries);
+                PreviousLogIndex = prevLogIndex;
+                PreviousLogTerm = prevLogTerm;
                 await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
             }
             else if (logs.Count > 1 && logs[prevLogIndex + 1] is not null)

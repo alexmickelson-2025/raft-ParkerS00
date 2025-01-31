@@ -13,10 +13,13 @@ public class ElectionTests
     {
         // Arrange
         var client = Substitute.For<IClient>();
+
         var followerNode = Substitute.For<INode>();
         followerNode.Id = 2;
+
         var leaderNode = new Node([followerNode], 1, client);
         leaderNode.logs = new List<Log>();
+        leaderNode.State = State.Candidate;
         leaderNode.BecomeLeader();
         
         // Act
@@ -121,7 +124,7 @@ public class ElectionTests
         testNode.StartElection();
 
         // Assert
-        testNode.Term.Should().Be(2);
+        testNode.Term.Should().Be(1);
     }
 
     // Test #7
@@ -369,7 +372,7 @@ public class ElectionTests
 
         // Act
         leaderNode.StartElection();
-        await leaderNode.CastVoteRPC(2, true);
+        await leaderNode.CastVoteRPC(1, true);
 
         // Assert
         await otherNode.Received().RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, Arg.Any<List<Log>>(), 0);
