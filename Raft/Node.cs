@@ -10,8 +10,7 @@ public class Node : INode
         State = State.Follower;
         Votes = 0;
         Term = 1;
-        NextIndex = 0;
-        LeaderCommitIndex = 0;
+        CommitIndex = 0;
         OtherNodes = otherNodes;
         Id = id;
         CurrentClient = client;
@@ -23,8 +22,7 @@ public class Node : INode
         State = State.Follower;
         Votes = 0;
         Term = 1;
-        NextIndex = 0;
-        LeaderCommitIndex = 0;
+        CommitIndex = 0;
         OtherNodes = otherNodes;
         StartElectionTimer();
     }
@@ -34,8 +32,7 @@ public class Node : INode
         State = State.Follower;
         Votes = 0;
         Term = 1;
-        NextIndex = 0;
-        LeaderCommitIndex = 0;
+        CommitIndex = 0;
         OtherNodes = new List<INode>();
         Id = id;
         StartElectionTimer();
@@ -45,8 +42,8 @@ public class Node : INode
     public int LeaderId { get; set; }
     public int Votes { get; set; }
     public int Term { get; set; }
-    public int NextIndex { get; set; }
-    public int LeaderCommitIndex { get; set; }
+    public int NextIndex { get => logs.Count; }
+    public int CommitIndex { get; set; }
     public int PreviousLogIndex { get; set; }
     public int PreviousLogTerm { get; set; }
     public bool Paused { get; set; }
@@ -57,8 +54,9 @@ public class Node : INode
     public List<Log> logs { get; set; } = new();
     public Dictionary<int, int> CurrentTermVotes { get; set; } = new();
     public Dictionary<int, int> FollowersNextIndex { get; set; } = new();
-    public Dictionary<int, string> StateMachine { get; set; } = new();
-    public int MajorityVote { get => (OtherNodes.Count / 2) + 1; }
+    public Dictionary<string, string> StateMachine { get; set; } = new();
+    public Dictionary<int, int> LogsReplicated { get; set; } = new();
+    public int MajorityVote { get => ((OtherNodes.Count + 1) / 2) + 1; }
     public int MaxDelay { get; set; } = 300;
     public int MinDelay { get; set; } = 150;
     public int LeaderDelay { get; set; } = 50;
@@ -103,7 +101,8 @@ public class Node : INode
         State = State.Leader;
         LeaderId = Id;
         StartHeartbeatTimer();
-        SendAppendEntriesRPC(Term, NextIndex);
+        InitializeLogs();
+        SendAppendEntriesRPC();
     }
 
     public void StartHeartbeatTimer()
@@ -112,160 +111,162 @@ public class Node : INode
         Timer.Dispose();
         Timer = new(LeaderDelay);
         StartTime = DateTime.Now;
-        Timer.Elapsed += (s, e) => { SendAppendEntriesRPC(Term, NextIndex); };
+        Timer.Elapsed += (s, e) => { SendAppendEntriesRPC(); };
         Timer.Start();
     }
 
     public void DetermineWinner()
     {
-        if (Votes >= MajorityVote && State == State.Candidate)
+        if (Votes == MajorityVote && State == State.Candidate)
         {
             BecomeLeader();
         }
     }
 
-    public void IncreaseCommitedLogs(int nextIndex, int termId)
+    public void IncreaseCommitedLogs(int nextIndexToCommit)
     {
-        if (LeaderCommitIndex == nextIndex)
+        if (CommitIndex == NextIndex || State == State.Follower)
         {
             return;
         }
 
-        int numberOfUpToDateNodes = 1;
-        foreach (var node in OtherNodes)
+        for (int i = CommitIndex; i < nextIndexToCommit - 1; i++)
         {
-            if (nextIndex == NextIndex && termId == Term)
-            {
-                numberOfUpToDateNodes++;
-            }
+            var currentLog = logs[i];
+            StateMachine[currentLog.Key] = currentLog.Value;
         }
-        if (numberOfUpToDateNodes >= MajorityVote && logs.Count > 0)
-        {
-            LeaderCommitIndex = NextIndex;
-            var command = logs[LeaderCommitIndex - 1].Command;
-            if (command is not null)
-            {
-                StateMachine[LeaderCommitIndex] = command;
-                SendClientConfirmation();
-            }
-        }
+        CommitIndex = nextIndexToCommit - 1;
+        SendClientConfirmation(true);
     }
 
-    public void SendAppendEntriesRPC(int termId, int nextIndex)
+    public void SendAppendEntriesRPC()
     {
-        IncreaseCommitedLogs(nextIndex, termId);
-        StartTime = DateTime.Now;
-        if (Term >= termId && State == State.Leader)
+        if (Paused || State == State.Follower)
         {
-            foreach (var node in OtherNodes)
-            {
-                InitializeLogs(node);
-                if (logs.Count >= 1)
-                {
-                    if (FollowersNextIndex[node.Id] == nextIndex)
-                    {
-                        List<Log> logsToSend = new();
-                        FollowersNextIndex[node.Id] = nextIndex;
-                        logsToSend.Add(logs[NextIndex - 1]);
-                        PreviousLogIndex = nextIndex - 1;
-                        PreviousLogTerm = Term;
+            return;
+        }
+        StartTime = DateTime.Now;
 
-                        node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logsToSend, LeaderCommitIndex);
-                    }
-                    else
-                    {
-                        List<Log> logsToSend = new();
-                        FollowersNextIndex[node.Id] = NextIndex - nextIndex;
-                        for (int i = logsToSend.Count; i < nextIndex; i++)
-                        {
-                            logsToSend.Add(logs[i]);
-                            PreviousLogIndex = nextIndex - (i + 1);
-                        }
-                        PreviousLogTerm = Term;
-                        node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logsToSend, LeaderCommitIndex);
-                    }
-                }
-                else
-                {
-                    node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, LeaderCommitIndex);
-                }
+        foreach (var node in OtherNodes)
+        {
+            if (logs.Count >= 1)
+            {
+                node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex);
+            }
+            else
+            {
+                node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex);
             }
         }
     }
 
     public async Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit)
     {
+        if (Paused)
+        {
+            return;
+        }
+
+        if (term > Term && (State == State.Candidate || State == State.Leader))
+        {
+            State = State.Follower;
+        }
+
         var currentLeader = OtherNodes.Where(x => x.Id == leaderId).FirstOrDefault();
 
         if (currentLeader is not null)
         {
-            if (term >= Term && currentLeader.Id == leaderId)
-            {
-                StartElectionTimer();
-                State = State.Follower;
-                LeaderId = leaderId;
-                Term = term;
-                NextIndex = prevLogIndex + 1;
+            StartElectionTimer();
+            State = State.Follower;
+            LeaderId = leaderId;
+            Term = term;
 
-                if (prevLogIndex != NextIndex)
-                {
-                    foreach (var log in entries)
-                    {
-                        logs.Add(log);
-                    }
-                }
-                if (leaderCommit > StateMachine.Count)
-                {
-                    var termMatch = logs.Select(x => x.Term == prevLogTerm).FirstOrDefault();
-                    if (logs.Count > 0 && termMatch)
-                    {
-                        var indexMatch = logs.Contains(logs[prevLogIndex]);
-                        if (indexMatch)
-                        {
-                            var command = logs[prevLogIndex].Command;
-                            if (command is not null)
-                            {
-                                StateMachine[prevLogIndex] = command;
-                            }
-                        }
-                    }
-                }
-                if (NextIndex != prevLogIndex)
-                {
-                    await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
-                    return;
-                }
+            if (leaderCommit > CommitIndex)
+            {
+                IncreaseFollowerCommitedLogs(leaderCommit);
             }
-            await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex);
+
+            if (prevLogIndex == 0 && prevLogTerm == 0)
+            {
+                logs.AddRange(entries);
+                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
+            }
+            else if (logs.Count > prevLogIndex && logs[prevLogIndex] is not null && logs.Last().Term == prevLogTerm) 
+            {
+                logs.AddRange(entries);
+                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
+            }
+            else if (logs.Count > 1 && logs[prevLogIndex + 1] is not null)
+            {
+                var logsToRemove = logs.Count - prevLogIndex;
+                logs.RemoveRange(NextIndex - 1, logsToRemove);
+
+                logs.AddRange(entries);
+                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
+            }
+            else
+            {
+                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, false, Id);
+            }
         }
     }
 
-    public async Task ConfirmAppendEntriesRPC(int term, int nextIndex)
+    public async Task ConfirmAppendEntriesRPC(int term, int nextIndex, bool status, int id)
     {
-        if (nextIndex == NextIndex)
+        if (Paused || State == State.Follower)
         {
-            IncreaseCommitedLogs(nextIndex, term);
+            return;
         }
-        else
+
+        if (term > Term)
         {
-            if (nextIndex >= 0)
+            State = State.Follower;
+            StartElectionTimer();
+        }
+
+        if (status == false)
+        {
+            FollowersNextIndex[Id] = nextIndex--;
+        }
+
+        if (status == true)
+        {
+            FollowersNextIndex[Id] = NextIndex;
+            LogsReplicated[nextIndex]++;
+
+            if (LogsReplicated[nextIndex] == MajorityVote)
             {
-                NextIndex--;
+                IncreaseCommitedLogs(LogsReplicated[nextIndex]);
             }
         }
+
         await Task.CompletedTask;
     }
 
-    public void InitializeLogs(INode node)
+    public void IncreaseFollowerCommitedLogs(int nextIndexToCommit)
     {
-        if (!FollowersNextIndex.ContainsKey(node.Id))
+        for (int i = CommitIndex; i < nextIndexToCommit; i++)
         {
-            FollowersNextIndex[node.Id] = 0;
+            var currentLog = logs[i];
+            StateMachine[currentLog.Key] = currentLog.Value;
+        }
+        CommitIndex = nextIndexToCommit - 1;
+    }
+
+    public void InitializeLogs()
+    {
+        foreach (var node in OtherNodes)
+        {
+            FollowersNextIndex[node.Id] = NextIndex;
         }
     }
 
     public void SendVoteRequestRPC()
     {
+        if (Paused)
+        {
+            return;
+        }
         if (State == State.Candidate)
         {
             foreach (var node in OtherNodes)
@@ -277,6 +278,10 @@ public class Node : INode
 
     public async Task RequestVoteRPC(int termId, int candidateId)
     {
+        if (Paused)
+        {
+            return;
+        }
         if (Term > termId)
         {
             return;
@@ -296,6 +301,10 @@ public class Node : INode
     }
     public async Task CastVoteRPC(int termId, bool vote)
     {
+        if (Paused)
+        {
+            return;
+        }
         if (vote && termId == Term)
         {
             Votes += 1;
@@ -307,17 +316,18 @@ public class Node : INode
         await Task.CompletedTask;
     }
 
-    public void RecieveClientCommand(string command)
+    public void RecieveClientCommand(string key, string value)
     {
-        Log newLog = new Log(Term, command);
+        Log newLog = new Log(Term, key, value);
         logs.Add(newLog);
-        NextIndex = logs.Count;
+
+        LogsReplicated.Add(NextIndex, 1);
     }
 
-    public void SendClientConfirmation()
+    public bool SendClientConfirmation(bool state)
     {
         CurrentClient.ReceiveNodeMessage();
-        return;
+        return state;
     }
 
     public void Pause()

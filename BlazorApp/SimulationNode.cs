@@ -23,13 +23,13 @@ public class SimulationNode : INode
         return ((INode)InnerNode).CastVoteRPC(candidateId, vote);
     }
 
-    public Task ConfirmAppendEntriesRPC(int term, int nextIndex)
+    public Task ConfirmAppendEntriesRPC(int term, int nextIndex, bool status, int id)
     {
         if (Paused == true)
         {
             return Task.CompletedTask;
         }
-        return ((INode)InnerNode).ConfirmAppendEntriesRPC(term, nextIndex);
+        return ((INode)InnerNode).ConfirmAppendEntriesRPC(term, nextIndex, status, id);
     }
 
     public void Pause()
@@ -37,9 +37,9 @@ public class SimulationNode : INode
         ((INode)InnerNode).Pause();
     }
 
-    public void RecieveClientCommand(string command)
+    public void RecieveClientCommand(string key, string value)
     {
-        ((INode)InnerNode).RecieveClientCommand(command);
+        ((INode)InnerNode).RecieveClientCommand(key, value);
     }
 
     public async Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit)
@@ -65,5 +65,14 @@ public class SimulationNode : INode
     public void UnPause()
     {
         ((INode)InnerNode).UnPause();
+    }
+
+    public void SendAppendEntriesRPC()
+    {
+        if (Paused == true)
+        {
+            return;
+        }
+        ((INode)InnerNode).SendAppendEntriesRPC();
     }
 }

@@ -35,6 +35,9 @@ Welcome to your new app.
 
     <div class="border p-3 rounded-3">
         <label>
+            Key <input class="form-control" @bind=userInputKey />
+        </label>
+        <label>
             Value <input class="form-control" @bind=userInputValue />
         </label>
         <hr>
@@ -62,15 +65,15 @@ Welcome to your new app.
                         Node @node.Id
                     </h3>
                     <div>
-                        @if (!node.Paused)
+                        @if (!node.InnerNode.Paused)
                         {
-                            <button class="btn btn-danger" @onclick="() => {node.Pause();}">
+                            <button class="btn btn-danger" @onclick="() => {node.InnerNode.Pause();}">
                                 Stop
                             </button>
                         }
-                        @if (node.Paused)
+                        @if (node.InnerNode.Paused)
                         {
-                            <button class="btn btn-success" @onclick="() => {node.UnPause();}">
+                            <button class="btn btn-success" @onclick="() => {node.InnerNode.UnPause();}">
                                 Start
                             </button>
                         }
@@ -89,10 +92,21 @@ Welcome to your new app.
                     Commit Index is @node.InnerNode.NextIndex
                 </div>
                 <div>
+                    Previous log index is @node.InnerNode.PreviousLogIndex
+                </div>
+                <div>
                     @foreach (var log in node.InnerNode.logs)
                     {
                         <p> Current Term: @log.Term</p>
-                        <p> Current Command: @log.Command</p>
+                        <p> Current Key: @log.Key</p>
+                        <p> Current Value: @log.Value</p>
+                        <p> Exists in State Machine: @(node.InnerNode.StateMachine.ContainsKey(log.Key) ? "yes" : "no") </p>
+                    }
+                </div>
+                <div>
+                   @foreach (var state in node.InnerNode.StateMachine)
+                    {
+                        <p> Key: @state.Key, Value: @state.Value</p>
                     }
                 </div>
                 <div>
@@ -110,6 +124,7 @@ Welcome to your new app.
     private Timer? timer;
     public int NodeIntervalScalar = 1;
     public int NetworkRequestDelay = 0;
+    string userInputKey = "";
     string userInputValue = "";
     string commandStatus = "";
 
@@ -155,7 +170,7 @@ Welcome to your new app.
     {
         foreach (var node in Nodes)
         {
-            node.InnerNode.LeaderDelay = NetworkRequestDelay;
+            node.InnerNode.LeaderDelay = 50 * NodeIntervalScalar;
             node.InnerNode.MinDelay = 150 * NodeIntervalScalar;
             node.InnerNode.MaxDelay = 300 * NodeIntervalScalar;
         }
@@ -172,8 +187,9 @@ Welcome to your new app.
         }
 
         var value = userInputValue;
+        var key = userInputKey;
 
-        dest.RecieveClientCommand(value);
+        dest.RecieveClientCommand(key, value);
         commandStatus = $"sent to node {destinationId}";
     }
 

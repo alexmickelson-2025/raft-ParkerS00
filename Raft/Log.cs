@@ -8,11 +8,13 @@ namespace ClassLibrary;
 
 public class Log
 {
-    public Log(int term, string command)
+    public Log(int term, string key, string value)
     {
         Term = term;
-        Command = command;
+        Key = key;
+        Value = value;
     }
     public int Term { get; set; }
-    public string? Command { get; set; }
+    public string? Key { get; set; }
+    public string Value { get; set; }
 }
