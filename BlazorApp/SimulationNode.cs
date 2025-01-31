@@ -14,22 +14,22 @@ public class SimulationNode : INode
     public int Id { get => ((INode)InnerNode).Id; set => ((INode)InnerNode).Id = value; }
     public int NetworkDelay { get; set; }
     public bool Paused { get; set;  }
-    public Task CastVoteRPC(int candidateId, bool vote)
+    public Task CastVoteRPC(CastVoteData voteRequest)
     {
         if (Paused == true)
         {
             return Task.CompletedTask;
         }
-        return ((INode)InnerNode).CastVoteRPC(candidateId, vote);
+        return ((INode)InnerNode).CastVoteRPC(voteRequest);
     }
 
-    public Task ConfirmAppendEntriesRPC(int term, int nextIndex, bool status, int id)
+    public Task ConfirmAppendEntriesRPC(ConfirmAppendEntriesData request)
     {
         if (Paused == true)
         {
             return Task.CompletedTask;
         }
-        return ((INode)InnerNode).ConfirmAppendEntriesRPC(term, nextIndex, status, id);
+        return ((INode)InnerNode).ConfirmAppendEntriesRPC(request);
     }
 
     public void Pause()
@@ -52,14 +52,14 @@ public class SimulationNode : INode
         await ((INode)InnerNode).RequestAppendEntriesRPC(request);
     }
 
-    public async Task RequestVoteRPC(int termId, int candidateId)
+    public async Task RequestVoteRPC(RequestVoteData voteRequest)
     {
         if (Paused == true)
         {
             return;
         }
         await Task.Delay(NetworkDelay);
-        await ((INode)InnerNode).RequestVoteRPC(termId, candidateId);
+        await ((INode)InnerNode).RequestVoteRPC(voteRequest);
     }
 
     public void UnPause()

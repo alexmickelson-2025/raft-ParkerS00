@@ -172,7 +172,7 @@ public class LoggingTests
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
         leaderNode.SendAppendEntriesRPC();
-        await leaderNode.ConfirmAppendEntriesRPC(0, 1, true, 1);
+        await leaderNode.ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(0, 1, true, 1));
 
         // Assert
         leaderNode.StateMachine["key"].Should().Be("value");
@@ -194,7 +194,7 @@ public class LoggingTests
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
         leaderNode.SendAppendEntriesRPC();
-        await leaderNode.ConfirmAppendEntriesRPC(0, 1, true, 1);
+        await leaderNode.ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(0, 1, true, 1));
 
         // Assert
         leaderNode.CommitIndex.Should().Be(1);    
@@ -243,7 +243,7 @@ public class LoggingTests
         await followerNode1.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 0, logs, 0));
 
         // Assert
-       await leaderNode.Received().ConfirmAppendEntriesRPC(1, 1, true, 1);
+       await leaderNode.Received().ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(1, 1, true, 1));
     }
 
     // Test #12
@@ -261,7 +261,7 @@ public class LoggingTests
         leaderNode.RecieveClientCommand("key", "value");
 
         // Act
-        await leaderNode.ConfirmAppendEntriesRPC(0, 1, true, 1);
+        await leaderNode.ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(0, 1, true, 1));
 
         // Assert
         await client.Received().ReceiveNodeMessage();
@@ -283,7 +283,7 @@ public class LoggingTests
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
         leaderNode.SendAppendEntriesRPC();
-        await leaderNode.ConfirmAppendEntriesRPC(0, 1, true, 1);
+        await leaderNode.ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(0, 1, true, 1));
 
         // Assert
         leaderNode.StateMachine["key"].Should().Be("value");
@@ -338,7 +338,7 @@ public class LoggingTests
         await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 2, 2, logs, 0));
 
         // Assert
-        await leaderNode.Received().ConfirmAppendEntriesRPC(1, 1, false, 2);
+        await leaderNode.Received().ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(1, 1, false, 2));
     }
 
     // Test #15.2
@@ -356,7 +356,7 @@ public class LoggingTests
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
         leaderNode.RecieveClientCommand("key 2", "value 2");
-        await leaderNode.ConfirmAppendEntriesRPC(0, 0, false, 1);
+        await leaderNode.ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(0, 0, false, 1));
 
         // Assert
         Thread.Sleep(50);

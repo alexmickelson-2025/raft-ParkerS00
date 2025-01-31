@@ -183,7 +183,7 @@ public class ElectionTests
 
         // Act
         leaderNode.StartElection();
-        await leaderNode.CastVoteRPC(leaderNode.Term, true);
+        await leaderNode.CastVoteRPC(new (leaderNode.Term, true));
 
         // Assert
         leaderNode.State.Should().Be(State.Leader);
@@ -200,10 +200,10 @@ public class ElectionTests
         var followerNode = new Node([leaderNode], 1, client);
 
         // Act
-        await followerNode.RequestVoteRPC(1, 2);
+        await followerNode.RequestVoteRPC(new RequestVoteData(1, 2));
 
         // Assert
-        await leaderNode.Received().CastVoteRPC(1, true);
+        await leaderNode.Received().CastVoteRPC(new(1, true));
     }
 
     // Test #11
@@ -272,11 +272,11 @@ public class ElectionTests
         var followerNode = new Node([leaderNode], 1, client);
 
         // Act
-        await followerNode.RequestVoteRPC(1, 2);
-        await followerNode.RequestVoteRPC(1, 2);
+        await followerNode.RequestVoteRPC(new RequestVoteData(1, 2));
+        await followerNode.RequestVoteRPC(new RequestVoteData(1, 2));
 
         // Assert
-        await leaderNode.Received().CastVoteRPC(1, false);
+        await leaderNode.Received().CastVoteRPC(new (1, false));
     }
 
     // Test #15
@@ -290,11 +290,11 @@ public class ElectionTests
         var followerNode = new Node([leaderNode], 1, client);
 
         // Act
-        await followerNode.RequestVoteRPC(1, 2);
-        await followerNode.RequestVoteRPC(2, 2);
+        await followerNode.RequestVoteRPC(new RequestVoteData(1, 2));
+        await followerNode.RequestVoteRPC(new RequestVoteData(2, 2));
 
         // Assert
-        await leaderNode.Received().CastVoteRPC(2, true);
+        await leaderNode.Received().CastVoteRPC(new (2, true));
     }
 
     // Test #16
@@ -373,7 +373,7 @@ public class ElectionTests
 
         // Act
         leaderNode.StartElection();
-        await leaderNode.CastVoteRPC(1, true);
+        await leaderNode.CastVoteRPC(new CastVoteData(1, true));
 
         // Assert
         await otherNode.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == leaderNode.Term && leaderNode.Id == dto.LeaderId));

@@ -195,14 +195,14 @@ public class Node : INode
                 logs.AddRange(request.Entries);
                 PreviousLogIndex = 0;
                 PreviousLogTerm = request.PrevLogTerm;
-                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
+                await currentLeader.ConfirmAppendEntriesRPC(new (Term, NextIndex, true, Id));
             }
             else if (logs.Count > request.PrevLogIndex && logs[request.PrevLogIndex] is not null && logs.Last().Term == request.PrevLogTerm) 
             {
                 logs.AddRange(request.Entries);
                 PreviousLogIndex = request.PrevLogIndex;
                 PreviousLogTerm = request.PrevLogTerm;
-                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
+                await currentLeader.ConfirmAppendEntriesRPC(new (Term, NextIndex, true, Id));
             }
             else if (logs.Count > 1 && logs[request.PrevLogIndex + 1] is not null)
             {
@@ -210,41 +210,41 @@ public class Node : INode
                 logs.RemoveRange(NextIndex - 1, logsToRemove);
 
                 logs.AddRange(request.Entries);
-                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
+                await currentLeader.ConfirmAppendEntriesRPC(new (Term, NextIndex, true, Id));
             }
             else
             {
-                await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, false, Id);
+                await currentLeader.ConfirmAppendEntriesRPC(new (Term, NextIndex, false, Id));
             }
         }
     }
 
-    public async Task ConfirmAppendEntriesRPC(int term, int nextIndex, bool status, int id)
+    public async Task ConfirmAppendEntriesRPC(ConfirmAppendEntriesData request)
     {
         if (Paused || State == State.Follower)
         {
             return;
         }
 
-        if (term > Term)
+        if (request.Term > Term)
         {
             State = State.Follower;
             StartElectionTimer();
         }
 
-        if (status == false)
+        if (request.Status == false)
         {
-            FollowersNextIndex[Id] = nextIndex--;
+            FollowersNextIndex[Id] = request.NextIndex--;
         }
 
-        if (status == true)
+        if (request.Status == true)
         {
             FollowersNextIndex[Id] = NextIndex;
-            LogsReplicated[nextIndex]++;
+            LogsReplicated[request.NextIndex]++;
 
-            if (LogsReplicated[nextIndex] == MajorityVote)
+            if (LogsReplicated[request.NextIndex] == MajorityVote)
             {
-                IncreaseCommitedLogs(LogsReplicated[nextIndex]);
+                IncreaseCommitedLogs(LogsReplicated[request.NextIndex]);
             }
         }
 
@@ -279,41 +279,41 @@ public class Node : INode
         {
             foreach (var node in OtherNodes)
             {
-                node.RequestVoteRPC(Term, Id);
+                node.RequestVoteRPC(new (Term, Id));
             }
         }
     }
 
-    public async Task RequestVoteRPC(int termId, int candidateId)
+    public async Task RequestVoteRPC(RequestVoteData voteRequest)
     {
         if (Paused)
         {
             return;
         }
-        if (Term > termId)
+        if (Term > voteRequest.TermId)
         {
             return;
         }
 
-        var candidateNode = OtherNodes.Where(x => x.Id == candidateId).FirstOrDefault();
+        var candidateNode = OtherNodes.Where(x => x.Id == voteRequest.CandidateId).FirstOrDefault();
 
         if (candidateNode is not null)
         {
-            if (!CurrentTermVotes.ContainsKey(termId))
+            if (!CurrentTermVotes.ContainsKey(voteRequest.TermId))
             {
-                CurrentTermVotes[termId] = candidateId;
-                await candidateNode.CastVoteRPC(termId, true);
+                CurrentTermVotes[voteRequest.TermId] = voteRequest.CandidateId;
+                await candidateNode.CastVoteRPC(new (voteRequest.TermId, true));
             }
-            await candidateNode.CastVoteRPC(termId, false);
+            await candidateNode.CastVoteRPC(new (voteRequest.TermId, false));
         }
     }
-    public async Task CastVoteRPC(int termId, bool vote)
+    public async Task CastVoteRPC(CastVoteData voteRequest)
     {
         if (Paused)
         {
             return;
         }
-        if (vote && termId == Term)
+        if (voteRequest.Vote && voteRequest.CandidateId == Term)
         {
             Votes += 1;
         }

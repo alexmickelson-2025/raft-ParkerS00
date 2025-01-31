@@ -57,7 +57,7 @@ public class DebuggingTests
         // Act
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
-        await leaderNode.ConfirmAppendEntriesRPC(0, 1, true, 1);
+        await leaderNode.ConfirmAppendEntriesRPC(new ConfirmAppendEntriesData(0, 1, true, 1));
 
         // Assert
         leaderNode.CommitIndex.Should().Be(1);
