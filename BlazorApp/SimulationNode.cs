@@ -42,14 +42,14 @@ public class SimulationNode : INode
         ((INode)InnerNode).RecieveClientCommand(key, value);
     }
 
-    public async Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit)
+    public async Task RequestAppendEntriesRPC(RequestAppendEntriesData request)
     {
         if (Paused == true)
         {
             return;
         }
         await Task.Delay(NetworkDelay);
-        await ((INode)InnerNode).RequestAppendEntriesRPC(term, leaderId, prevLogIndex, prevLogTerm, entries, leaderCommit);
+        await ((INode)InnerNode).RequestAppendEntriesRPC(request);
     }
 
     public async Task RequestVoteRPC(int termId, int candidateId)

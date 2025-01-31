@@ -155,61 +155,61 @@ public class Node : INode
             {
                 PreviousLogIndex = NextIndex - 1;
                 PreviousLogTerm = logs[NextIndex - 1].Term; 
-                node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex);
+                node.RequestAppendEntriesRPC(new RequestAppendEntriesData(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex));
             }
             else
             {
-                node.RequestAppendEntriesRPC(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex);
+                node.RequestAppendEntriesRPC(new RequestAppendEntriesData(Term, Id, PreviousLogIndex, PreviousLogTerm, logs, CommitIndex));
             }
         }
     }
 
-    public async Task RequestAppendEntriesRPC(int term, int leaderId, int prevLogIndex, int prevLogTerm, List<Log> entries, int leaderCommit)
+    public async Task RequestAppendEntriesRPC(RequestAppendEntriesData request)
     {
         if (Paused)
         {
             return;
         }
 
-        if (term > Term && (State == State.Candidate || State == State.Leader))
+        if (request.Term > Term && (State == State.Candidate || State == State.Leader))
         {
             State = State.Follower;
         }
 
-        var currentLeader = OtherNodes.Where(x => x.Id == leaderId).FirstOrDefault();
+        var currentLeader = OtherNodes.Where(x => x.Id == request.LeaderId).FirstOrDefault();
 
         if (currentLeader is not null)
         {
             StartElectionTimer();
             State = State.Follower;
-            LeaderId = leaderId;
-            Term = term;
+            LeaderId = request.LeaderId;
+            Term = request.Term;
 
-            if (leaderCommit > CommitIndex)
+            if (request.LeaderCommit > CommitIndex)
             {
-                IncreaseFollowerCommitedLogs(leaderCommit);
+                IncreaseFollowerCommitedLogs(request.LeaderCommit);
             }
 
-            if (logs.Count < 1 && prevLogIndex == 0 && (prevLogTerm == 0 || prevLogTerm == 1))
+            if (logs.Count < 1 && request.PrevLogIndex == 0 && (request.PrevLogTerm == 0 || request.PrevLogTerm == 1))
             {
-                logs.AddRange(entries);
+                logs.AddRange(request.Entries);
                 PreviousLogIndex = 0;
-                PreviousLogTerm = prevLogTerm;
+                PreviousLogTerm = request.PrevLogTerm;
                 await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
             }
-            else if (logs.Count > prevLogIndex && logs[prevLogIndex] is not null && logs.Last().Term == prevLogTerm) 
+            else if (logs.Count > request.PrevLogIndex && logs[request.PrevLogIndex] is not null && logs.Last().Term == request.PrevLogTerm) 
             {
-                logs.AddRange(entries);
-                PreviousLogIndex = prevLogIndex;
-                PreviousLogTerm = prevLogTerm;
+                logs.AddRange(request.Entries);
+                PreviousLogIndex = request.PrevLogIndex;
+                PreviousLogTerm = request.PrevLogTerm;
                 await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
             }
-            else if (logs.Count > 1 && logs[prevLogIndex + 1] is not null)
+            else if (logs.Count > 1 && logs[request.PrevLogIndex + 1] is not null)
             {
-                var logsToRemove = logs.Count - prevLogIndex;
+                var logsToRemove = logs.Count - request.PrevLogIndex;
                 logs.RemoveRange(NextIndex - 1, logsToRemove);
 
-                logs.AddRange(entries);
+                logs.AddRange(request.Entries);
                 await currentLeader.ConfirmAppendEntriesRPC(Term, NextIndex, true, Id);
             }
             else

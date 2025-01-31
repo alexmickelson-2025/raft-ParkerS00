@@ -26,7 +26,8 @@ public class ElectionTests
         Thread.Sleep(420);
 
         // Assert
-        await followerNode.Received(9).RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, Arg.Any<List<Log>>(), 0);
+        // new RequestAppendEntriesData(leaderNode.Term, leaderNode.Id, 0, 0, Arg.Any<List<Log>>(), 0);
+        await followerNode.Received(9).RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == leaderNode.Term && dto.LeaderId == leaderNode.Id));
     }
 
     // Test #2
@@ -141,7 +142,7 @@ public class ElectionTests
         followerNode.LeaderId = 2;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, new List<Log>(), 0);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 0, new List<Log>(), 0));
         Thread.Sleep(100);
 
         // Assert
@@ -232,7 +233,7 @@ public class ElectionTests
         candidateNode.Term = 1;
 
         // Act
-        await candidateNode.RequestAppendEntriesRPC(2, 0, 0, 0, new List<Log>(), 0);
+        await candidateNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(2, 0, 0, 0, new List<Log>(), 0));
 
         // Assert
         candidateNode.State.Should().Be(State.Follower);
@@ -254,7 +255,7 @@ public class ElectionTests
         candidateNode.LeaderId = 2;
 
         // Act
-        await candidateNode.RequestAppendEntriesRPC(1, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await candidateNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, leaderNode.Id, 0, 0, new List<Log>(), 0));
 
         // Assert
         candidateNode.State.Should().Be(State.Follower);
@@ -332,7 +333,7 @@ public class ElectionTests
         followerNode.LeaderId = 2;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, leaderNode.Id, 0, 0, new List<Log>(), 0));
 
         // Assert
        // await leaderNode.Received().ConfirmAppendEntriesRPC(1, 0);
@@ -355,7 +356,7 @@ public class ElectionTests
         leaderNode.SendAppendEntriesRPC();
 
         // Assert
-        await candidateNode.DidNotReceive().RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0);
+        await candidateNode.DidNotReceive().RequestAppendEntriesRPC(new RequestAppendEntriesData(leaderNode.Term, leaderNode.Id, 0, 0, new List<Log>(), 0));
     }
 
     // Test #19
@@ -375,6 +376,6 @@ public class ElectionTests
         await leaderNode.CastVoteRPC(1, true);
 
         // Assert
-        await otherNode.Received().RequestAppendEntriesRPC(leaderNode.Term, leaderNode.Id, 0, 0, Arg.Any<List<Log>>(), 0);
+        await otherNode.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == leaderNode.Term && leaderNode.Id == dto.LeaderId));
     }
 }

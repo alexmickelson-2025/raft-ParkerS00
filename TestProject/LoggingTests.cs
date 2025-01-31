@@ -24,11 +24,11 @@ public class LoggingTests
         leaderNode.RecieveClientCommand("key", "value");
 
         // Assert
-        await followerNode1.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Is<List<Log>>(logs => 
+        await followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Is<List<Log>>(logs => 
             logs.Count == 1 &&
             logs[0].Term == 0 &&
             logs[0].Key == "key" &&
-            logs[0].Value == "value"), 0);
+            logs[0].Value == "value"), 0));
     }
 
     // Test #2
@@ -124,7 +124,7 @@ public class LoggingTests
         leaderNode.SendAppendEntriesRPC();
 
         // Assert
-        followerNode1.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
         leaderNode.CommitIndex.Should().Be(0);
     }
 
@@ -147,7 +147,7 @@ public class LoggingTests
         followerNode.logs = logs;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 1, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 1, logs, 1));
 
         // Assert
         followerNode.StateMachine["key"].Should().Be("value");
@@ -213,7 +213,7 @@ public class LoggingTests
         logs.Add(log);  
 
         // Act
-        await followerNode1.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 0);
+        await followerNode1.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 0, logs, 0));
 
         // Assert
         followerNode1.logs.Count.Should().Be(1);
@@ -237,7 +237,7 @@ public class LoggingTests
 
 
         // Act
-        await followerNode1.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 0);
+        await followerNode1.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 0, logs, 0));
 
         // Assert
        await leaderNode.Received().ConfirmAppendEntriesRPC(1, 1, true, 1);
@@ -303,7 +303,7 @@ public class LoggingTests
         followerNode.logs = logs;
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 0, logs, 1));
 
         // Assert
         followerNode.StateMachine["key"].Should().Be("value"); 
@@ -332,7 +332,7 @@ public class LoggingTests
         logs.Add(log3);
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 2, 2, logs, 0);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 2, 2, logs, 0));
 
         // Assert
         await leaderNode.Received().ConfirmAppendEntriesRPC(1, 1, false, 2);
@@ -357,7 +357,7 @@ public class LoggingTests
 
         // Assert
         Thread.Sleep(50);
-        await followerNode1.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        await followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
     }
 
     // Test #16
@@ -398,9 +398,9 @@ public class LoggingTests
         Thread.Sleep(60);
 
         // Assert
-        followerNode1.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
         Thread.Sleep(60);
-        followerNode1.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
     }
 
     // Test #18
@@ -427,7 +427,7 @@ public class LoggingTests
         var followerNode = new Node(1);
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 2, 1, new List<Log>(), 1);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 2, 1, new List<Log>(), 1));
 
         // Assert
         followerNode.StateMachine.Count.Should().Be(0); 
@@ -452,6 +452,6 @@ public class LoggingTests
         leaderNode.RecieveClientCommand("key 1", "value 1");
 
         // Assert
-        await followerNode.Received().RequestAppendEntriesRPC(0, 2, 0, 0, Arg.Any<List<Log>>(), 0);
+        await followerNode.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0) );
     }
 }

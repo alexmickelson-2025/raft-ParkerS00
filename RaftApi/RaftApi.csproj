@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BlazorApp\BlazorApp.csproj" />
+    <ProjectReference Include="..\Raft\ClassLibrary.csproj" />
   </ItemGroup>
 
 </Project>

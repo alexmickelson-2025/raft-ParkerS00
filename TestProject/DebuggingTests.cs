@@ -88,8 +88,8 @@ public class DebuggingTests
         };
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 0, logs, 0);
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 1, new List<Log>(), 0);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 0, logs, 0));
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 1, new List<Log>(), 0));
 
         // Assert
         followerNode.logs.Count().Should().Be(1);
@@ -113,7 +113,7 @@ public class DebuggingTests
         };
 
         // Act
-        await followerNode.RequestAppendEntriesRPC(1, 2, 0, 1, logs, 0);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 1, logs, 0));
 
         // Assert
         followerNode.logs.Count().Should().Be(1);
@@ -123,7 +123,7 @@ public class DebuggingTests
         log = new Log(1, "key 2", "value 2");
         logs[0] = log;
 
-        await followerNode.RequestAppendEntriesRPC(2, 2, 0, 1, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(2, 2, 0, 1, logs, 1));
 
         followerNode.logs.Count.Should().Be(2);
         followerNode.PreviousLogIndex.Should().Be(0);
@@ -132,7 +132,7 @@ public class DebuggingTests
         log = new Log(2, "key 3", "value 3");
         logs[0] = log;
 
-        await followerNode.RequestAppendEntriesRPC(2, 2, 1, 1, logs, 1);
+        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(2, 2, 1, 1, logs, 1));
 
         followerNode.logs.Count.Should().Be(3);
         followerNode.PreviousLogIndex.Should().Be(1);
