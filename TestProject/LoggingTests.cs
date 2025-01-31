@@ -24,11 +24,10 @@ public class LoggingTests
         leaderNode.RecieveClientCommand("key", "value");
 
         // Assert
-        await followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Is<List<Log>>(logs => 
-            logs.Count == 1 &&
-            logs[0].Term == 0 &&
-            logs[0].Key == "key" &&
-            logs[0].Value == "value"), 0));
+        await followerNode1.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Entries.Count == 1 &&
+                                                                                                dto.Entries[0].Term == 0 &&
+                                                                                                dto.Entries[0].Key == "key" &&
+                                                                                                dto.Entries[0].Value == "value"));
     }
 
     // Test #2
@@ -124,7 +123,11 @@ public class LoggingTests
         leaderNode.SendAppendEntriesRPC();
 
         // Assert
-        followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        followerNode1.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 && 
+                                                                                            dto.LeaderId == 2 && 
+                                                                                            dto.PrevLogIndex == 0 &&
+                                                                                            dto.PrevLogTerm == 0 && 
+                                                                                            dto.LeaderCommit == 0));
         leaderNode.CommitIndex.Should().Be(0);
     }
 
@@ -357,7 +360,11 @@ public class LoggingTests
 
         // Assert
         Thread.Sleep(50);
-        await followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        await followerNode1.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
     }
 
     // Test #16
@@ -398,9 +405,17 @@ public class LoggingTests
         Thread.Sleep(60);
 
         // Assert
-        followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        followerNode1.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
         Thread.Sleep(60);
-        followerNode1.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        followerNode1.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
     }
 
     // Test #18
@@ -452,6 +467,10 @@ public class LoggingTests
         leaderNode.RecieveClientCommand("key 1", "value 1");
 
         // Assert
-        await followerNode.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0) );
+        await followerNode.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
     }
 }

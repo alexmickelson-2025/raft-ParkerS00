@@ -23,7 +23,11 @@ public class PausingTests
         Thread.Sleep(400);
 
         // Assert
-        followerNode.Received(1).RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        followerNode.Received(1).RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
     }
 
     [Fact]
@@ -38,7 +42,11 @@ public class PausingTests
         leaderNode.BecomeLeader();
 
         // Act
-        followerNode.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        followerNode.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
 
         leaderNode.Pause();
         Thread.Sleep(400);
@@ -46,7 +54,11 @@ public class PausingTests
         Thread.Sleep(48);
 
         // Assert
-        followerNode.Received().RequestAppendEntriesRPC(new RequestAppendEntriesData(0, 2, 0, 0, Arg.Any<List<Log>>(), 0));
+        followerNode.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == 0 &&
+                                                                                                dto.LeaderId == 2 &&
+                                                                                                dto.PrevLogIndex == 0 &&
+                                                                                                dto.PrevLogTerm == 0 &&
+                                                                                                dto.LeaderCommit == 0));
     }
 
     [Fact]
