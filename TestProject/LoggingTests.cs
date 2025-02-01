@@ -22,6 +22,7 @@ public class LoggingTests
         // Act
         leaderNode.BecomeLeader();
         leaderNode.RecieveClientCommand("key", "value");
+        Thread.Sleep(60);
 
         // Assert
         await followerNode1.Received().RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Entries.Count == 1 &&

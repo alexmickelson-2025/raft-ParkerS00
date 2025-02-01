@@ -1,27 +1,49 @@
 using ClassLibrary;
 using Raft;
+using RaftApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
-builder.Services.AddEndpointsApiExplorer();
-
 var app = builder.Build();
 
-List<INode> otherNodes = [];
+var nodeId = Environment.GetEnvironmentVariable("NODE_ID") ?? throw new Exception("NODE_ID environment variable not set");
+var otherNodesRaw = Environment.GetEnvironmentVariable("OTHER_NODES") ?? throw new Exception("OTHER_NODES environment variable not set");
+var nodeIntervalScalarRaw = Environment.GetEnvironmentVariable("NODE_INTERVAL_SCALAR") ?? throw new Exception("NODE_INTERVAL_SCALAR environment variable not set");
 
-var node = new Node(otherNodes)
+INode[] otherNodes = otherNodesRaw
+  .Split(";")
+  .Select(s => new HttpRpcOtherNode(int.Parse(s)))
+  .ToArray();
+
+var node = new Node([.. otherNodes])
 {
-    Id = 1,
+    Id = int.Parse(nodeId),
 };
 
-app.MapPost("/request/appendEntries", async () =>
+app.MapPost("/request/appendEntries", async (RequestAppendEntriesData request) =>
 {
-    Console.WriteLine("Sending append entries");
-    //await node.RequestAppendEntriesRPC();
+    Console.WriteLine($"Received append entries request {request}");
+    await node.RequestAppendEntriesRPC(request);
 });
 
-app.UseHttpsRedirection();
+app.MapPost("/request/vote", async (RequestVoteData request) =>
+{
+    Console.WriteLine($"Received vote request {request}");
+    await node.RequestVoteRPC(request);
+});
+
+app.MapPost("/response/appendEntries", async (ConfirmAppendEntriesData response) =>
+{
+    Console.WriteLine($"Received append entries response {response}");
+    await node.ConfirmAppendEntriesRPC(response);
+});
+
+app.MapPost("/response/vote", async (CastVoteData response) =>
+{
+    Console.WriteLine($"Recieved vote response {response}");
+    await node.CastVoteRPC(response);
+});
 
 app.Run();
 
