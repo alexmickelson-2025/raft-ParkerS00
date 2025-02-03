@@ -8,10 +8,10 @@ services:
     volumes:
       - ./:/app
     environment:
-      - NODE_ID=1
-      - OTHER_NODES=2;3
-      - NODE_INTERVAL_SCALAR=50
-    command: dotnet run --project RaftApi
+      - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
+    command: dotnet run --project RaftClient
+    ports:
+    - 4951:8080
 
 
   node2:
@@ -23,10 +23,10 @@ services:
     volumes:
       - ./:/app
     environment:
-      - NODE_ID=2
-      - OTHER_NODES=1;3
-      - NODE_INTERVAL_SCALAR=50
-    command: dotnet run --project RaftApi
+      - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
+    command: dotnet run --project RaftClient
+    ports:
+    - 4951:8080
 
   node3:
     build:
@@ -37,7 +37,7 @@ services:
     volumes:
       - ./:/app
     environment:
-      - NODE_ID=3
-      - OTHER_NODES=1;2
-      - NODE_INTERVAL_SCALAR=50
-    command: dotnet run --project RaftApi
+      - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
+    command: dotnet run --project RaftClient
+    ports:
+    - 4951:8080
