@@ -1,5 +1,5 @@
 services:
-  node1:
+  client: 
     build:
       context: .
       dockerfile: dev.Dockerfile
@@ -11,8 +11,19 @@ services:
       - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
     command: dotnet run --project RaftClient
     ports:
-    - 4951:8080
+    - 4560:8080
 
+  node1:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    working_dir: /app
+    user: 1000:1000
+    volumes:
+      - ./:/app
+    environment:
+      - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
+    command: dotnet run --project RaftApi
 
   node2:
     build:
@@ -24,9 +35,7 @@ services:
       - ./:/app
     environment:
       - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
-    command: dotnet run --project RaftClient
-    ports:
-    - 4951:8080
+    command: dotnet run --project RaftApi
 
   node3:
     build:
@@ -38,6 +47,4 @@ services:
       - ./:/app
     environment:
       - NODE_URLS=http://node1:8080,http://node2:8080,http://node3:8080
-    command: dotnet run --project RaftClient
-    ports:
-    - 4951:8080
+    command: dotnet run --project RaftApi
