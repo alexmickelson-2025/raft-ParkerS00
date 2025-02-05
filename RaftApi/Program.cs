@@ -45,6 +45,18 @@ app.MapPost("/response/vote", async (CastVoteData response) =>
     await node.CastVoteRPC(response);
 });
 
+app.MapPost("/command", (ClientCommand command) =>
+{
+    Console.WriteLine($"Command send to leader node");
+    node.RecieveClientCommand(command.Key, command.Value);
+});
+
+app.MapGet("/nodeData", () =>
+{
+    return new NodeData(node.Id, node.LeaderId, node.Term, node.CommitIndex, node.logs, node.State, node.StateMachine, node.Timer, node.StartTime);
+
+});
+
 app.Run();
 
 

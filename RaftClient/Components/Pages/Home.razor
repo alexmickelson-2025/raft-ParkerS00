@@ -1,9 +1,84 @@
-﻿@page "/"
+﻿@using ClassLibrary
+@using Raft
 @rendermode InteractiveServer
+@page "/"
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Raft Simulation</h1>
+
+Welcome to your new app.
+
+
+<button class="btn btn-primary" @onclick=startSimulation>Start Simulation</button>
+
+<div class="row">
+    <div class="border p-3 rounded-3">
+        <label>
+            Key <input class="form-control" @bind=userInputKey />
+        </label>
+        <label>
+            Value <input class="form-control" @bind=userInputValue />
+        </label>
+        <hr>
+        @foreach (var node in Nodes.Values)
+        {
+            <button class="btn btn-outline-primary mx-1" @onclick="() => SendCommand(node.Id)">Send to Node @node.Id</button>
+        }
+        <br>
+        <div>
+            @commandStatus
+        </div>
+    </div>
+
+    @foreach (var node in Nodes.Values)
+    {
+        var elapsedTime = DateTime.Now - node.StartTime;
+        var timeoutDuration = node.Timer.Interval;
+        var remainingTime = timeoutDuration - elapsedTime.TotalMilliseconds;
+        var percentageRemaining = Math.Max(0, (int)(100 * remainingTime / timeoutDuration));
+
+        <div class="p-3 col-4">
+            <div class="border p-3 rounded-3">
+                <div class="d-flex justify-content-between">
+                    <h3>
+                        Node @node.Id
+                    </h3>
+                </div>
+                <div>
+                    @node.State
+                </div>
+                <div>
+                    Term @node.Term
+                </div>
+                <div>
+                    Leader is @node.LeaderId
+                </div>
+                <div>
+                    @foreach (var log in node.Logs)
+                    {
+                        <p> Current Term: @log.Term</p>
+                        <p> Current Key: @log.Key</p>
+                        <p> Current Value: @log.Value</p>
+                        <p> Exists in State Machine: @(node.StateMachine.ContainsKey(log.Key) ? "yes" : "no") </p>
+                    }
+                </div>
+                <div>
+                    @foreach (var state in node.StateMachine)
+                    {
+                        <p> Key: @state.Key, Value: @state.Value</p>
+                    }
+                </div>
+                <div>
+                    <div class="progress" role="progressbar" aria-label="Timeout Progress"
+                         aria-valuenow=@remainingTime aria-valuemin="0" aria-valuemax=@timeoutDuration>
+                        <div class="progress-bar bg-dark-subtle" style="width: @percentageRemaining%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @foreach (var url in Urls)
 {
@@ -12,4 +87,67 @@
 
 @code {
     string[] Urls = Environment.GetEnvironmentVariable("NODE_URLS").Split(',');
+
+    private Timer? timer;
+    public int NodeIntervalScalar = 1;
+    public int NetworkRequestDelay = 0;
+    string userInputKey = "";
+    string userInputValue = "";
+    string commandStatus = "";
+
+    private readonly HttpClient httpClient = new();
+
+    Dictionary<string, NodeData> Nodes = new();
+
+    void startSimulation()
+    {
+        timer = new Timer(async (_) =>
+        {
+            foreach (var url in Urls)
+            {
+                var thing = await httpClient.GetFromJsonAsync<NodeData>(url + "/NodeData");
+                if (thing is not null)
+                {
+                    Nodes[url] = thing;
+                }
+            }
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 200);
+    }
+
+    public static string FormatTimeSpan(TimeSpan timeSpan)
+    {
+        double totalSeconds = timeSpan.TotalSeconds;
+        return $"{totalSeconds:F1}";
+    }
+
+    public static string FormatMilliSeconds(double milliSeconds)
+    {
+        return $"{milliSeconds / 1000.0:F1}";
+    }
+
+    public void SendCommand(int destinationId)
+    {
+        commandStatus = "sending";
+        var dest = Nodes.Values.FirstOrDefault(n => n.Id == destinationId);
+
+        if (dest is null)
+        {
+            return;
+        }
+
+        var value = userInputValue;
+        var key = userInputKey;
+
+        var leaderUrl = Urls[destinationId - 1];
+
+        var ClientCommand = new ClientCommand
+            {
+                Key = key,
+                Value = value
+            };
+
+        httpClient.PostAsJsonAsync<ClientCommand>(leaderUrl + "/command", ClientCommand);
+        commandStatus = $"sent to node {destinationId}";
+    }
 }
