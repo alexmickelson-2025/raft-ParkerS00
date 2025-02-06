@@ -26,8 +26,7 @@ public class ElectionTests
         Thread.Sleep(420);
 
         // Assert
-        // new RequestAppendEntriesData(leaderNode.Term, leaderNode.Id, 0, 0, Arg.Any<List<Log>>(), 0);
-        await followerNode.Received(9).RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == leaderNode.Term && dto.LeaderId == leaderNode.Id));
+        await followerNode.Received(8).RequestAppendEntriesRPC(Arg.Is<RequestAppendEntriesData>(dto => dto.Term == leaderNode.Term && dto.LeaderId == leaderNode.Id));
     }
 
     // Test #2

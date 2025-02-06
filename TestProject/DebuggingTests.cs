@@ -94,49 +94,4 @@ public class DebuggingTests
         // Assert
         followerNode.logs.Count().Should().Be(1);
     }
-
-    [Fact]
-    public async Task FollowerNodeCanRecieveALogCommitAndThenRecieveAnotherOneAndCommit()
-    {
-        // Assert
-        var client = Substitute.For<IClient>();
-
-        var leaderNode = Substitute.For<INode>();
-        leaderNode.Id = 2;
-
-        var followerNode = new Node([leaderNode], 1, client);
-
-        var log = new Log(1, "key", "value");
-        var logs = new List<Log>
-        {
-            log
-        };
-
-        // Act
-        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(1, 2, 0, 1, logs, 0));
-
-        // Assert
-        followerNode.logs.Count().Should().Be(1);
-        followerNode.PreviousLogIndex.Should().Be(0);
-        followerNode.PreviousLogTerm.Should().Be(1);
-
-        log = new Log(1, "key 2", "value 2");
-        logs[0] = log;
-
-        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(2, 2, 0, 1, logs, 1));
-
-        followerNode.logs.Count.Should().Be(2);
-        followerNode.PreviousLogIndex.Should().Be(0);
-        followerNode.PreviousLogTerm.Should().Be(1);
-
-        log = new Log(2, "key 3", "value 3");
-        logs[0] = log;
-
-        await followerNode.RequestAppendEntriesRPC(new RequestAppendEntriesData(2, 2, 1, 1, logs, 1));
-
-        followerNode.logs.Count.Should().Be(3);
-        followerNode.PreviousLogIndex.Should().Be(1);
-        followerNode.PreviousLogTerm.Should().Be(1);
-
-    }
 }

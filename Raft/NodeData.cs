@@ -13,7 +13,7 @@ public record NodeData
                     DateTime startTime)
     {
         Id = id;
-        LeaderId = LeaderId;
+        LeaderId = leaderId;
         Term = term;
         CommitIndex = commitIndex;
         Logs = logs;

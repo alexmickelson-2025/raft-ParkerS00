@@ -23,39 +23,44 @@ var node = new Node([.. otherNodes])
 
 app.MapPost("/request/appendEntries", async (RequestAppendEntriesData request) =>
 {
-    Console.WriteLine($"Received append entries request {request}");
+    //Console.WriteLine($"Received append entries request," +
+    //    $"LeaderId: {request.LeaderId}, Leader Commit: {request.LeaderCommit}, Term: {request.Term}, Entries: {request.Entries.Count}");
     await node.RequestAppendEntriesRPC(request);
 });
 
 app.MapPost("/request/vote", async (RequestVoteData request) =>
 {
-    Console.WriteLine($"Received vote request {request}");
+    //Console.WriteLine($"Received vote request {request.CandidateId}");
     await node.RequestVoteRPC(request);
 });
 
 app.MapPost("/response/appendEntries", async (ConfirmAppendEntriesData response) =>
 {
-    Console.WriteLine($"Received append entries response {response}");
+    //Console.WriteLine($"Received append entries response {response.NextIndex}");
     await node.ConfirmAppendEntriesRPC(response);
 });
 
 app.MapPost("/response/vote", async (CastVoteData response) =>
 {
-    Console.WriteLine($"Recieved vote response {response}");
+    //Console.WriteLine($"Recieved vote response {response}");
     await node.CastVoteRPC(response);
 });
 
 app.MapPost("/command", (ClientCommand command) =>
 {
-    Console.WriteLine($"Command send to leader node");
+    Console.WriteLine($"Command send to leader node, Key: {command.Key}, Value: {command.Value}");
     node.RecieveClientCommand(command.Key, command.Value);
 });
 
 app.MapGet("/nodeData", () =>
 {
+    foreach (var value in node.StateMachine)
+    {
+        Console.WriteLine($"Returning NodeData: StateMachine: {value.Key}, {value.Value}");
+    }
     return new NodeData(node.Id, node.LeaderId, node.Term, node.CommitIndex, node.logs, node.State, node.StateMachine, node.Timer, node.StartTime);
-
 });
+
 
 app.Run();
 

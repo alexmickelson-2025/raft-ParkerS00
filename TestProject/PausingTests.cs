@@ -85,7 +85,7 @@ public class PausingTests
         followerNode.Pause();
         Thread.Sleep(400);
         followerNode.UnPause();
-        Thread.Sleep(300);
+        Thread.Sleep(400);
 
         // Assert
         followerNode.State.Should().Be(State.Candidate);

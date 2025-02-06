@@ -102,17 +102,33 @@ Welcome to your new app.
     void startSimulation()
     {
         timer = new Timer(async (_) =>
-        {
-            foreach (var url in Urls)
-            {
-                var thing = await httpClient.GetFromJsonAsync<NodeData>(url + "/NodeData");
-                if (thing is not null)
-                {
-                    Nodes[url] = thing;
-                }
-            }
-            await InvokeAsync(StateHasChanged);
-        }, null, 0, 200);
+     {
+         try
+         {
+             foreach (var url in Urls)
+             {
+                 try
+                 {
+                     var thing = await httpClient.GetFromJsonAsync<NodeData>(url + "/NodeData");
+
+                     if (thing is not null)
+                     {
+                         Nodes[url] = thing;
+                     }
+                 }
+                 catch
+                 {
+                     
+                 }
+             }
+             await InvokeAsync(StateHasChanged);
+         }
+         catch (Exception ex)
+         {
+             Console.Error.WriteLine(ex);
+         }
+     }, null, 0, 200);
+
     }
 
     public static string FormatTimeSpan(TimeSpan timeSpan)
@@ -126,28 +142,38 @@ Welcome to your new app.
         return $"{milliSeconds / 1000.0:F1}";
     }
 
-    public void SendCommand(int destinationId)
+    public async Task SendCommand(int destinationId)
     {
-        commandStatus = "sending";
-        var dest = Nodes.Values.FirstOrDefault(n => n.Id == destinationId);
-
-        if (dest is null)
+        try
         {
-            return;
-        }
 
-        var value = userInputValue;
-        var key = userInputKey;
+            commandStatus = "sending";
+            var dest = Nodes.Values.FirstOrDefault(n => n.Id == destinationId);
 
-        var leaderUrl = Urls[destinationId - 1];
+            if (dest is null)
+            {
+                return;
+            }
 
-        var ClientCommand = new ClientCommand
+            var value = userInputValue;
+            var key = userInputKey;
+
+            var leaderUrl = Urls[destinationId - 1];
+
+            var clientCommand = new ClientCommand
             {
                 Key = key,
                 Value = value
             };
 
-        httpClient.PostAsJsonAsync<ClientCommand>(leaderUrl + "/command", ClientCommand);
-        commandStatus = $"sent to node {destinationId}";
+            await httpClient.PostAsJsonAsync<ClientCommand>(leaderUrl + "/command", clientCommand);
+            commandStatus = $"sent to node {destinationId}";
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            
+        }
     }
+
 }

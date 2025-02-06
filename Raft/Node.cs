@@ -212,34 +212,34 @@ public class Node : INode
             }
 
             // Case for the first log
-            if (logs.Count < 1 && request.PrevLogIndex == 0 && request.PrevLogTerm == 0)
+            if (logs.Count < 1 && request.PrevLogIndex == 0 && request.PrevLogTerm == 0 && request.Entries is not null)
             {
                 logs.AddRange(request.Entries);
                 PreviousLogIndex = 0;
                 PreviousLogTerm = request.PrevLogTerm;
-                currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, true, Id));
+                await currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, true, Id));
             }
             // Case for if they are 1 log behind
-            else if (logs.Count() == request.PrevLogIndex  && logs.Count() > 0 && logs.Last().Term == request.PrevLogTerm)
+            else if (logs.Count() == request.PrevLogIndex  && logs.Count() > 0 && logs.Last().Term == request.PrevLogTerm && request.Entries is not null)
             {
                 logs.AddRange(request.Entries);
                 PreviousLogIndex = request.PrevLogIndex;
                 PreviousLogTerm = request.PrevLogTerm;
-                 currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, true, Id));
+                await currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, true, Id));
             }
             // Case for if they are ahead on logs
-            else if (logs.Count > 1 && logs[request.PrevLogIndex + 1] is not null)
+            else if (logs.Count > 1 && logs[request.PrevLogIndex + 1] is not null && request.Entries is not null)
             {
                 var logsToRemove = logs.Count - request.PrevLogIndex;
                 logs.RemoveRange(request.PrevLogIndex - 1, logsToRemove);
 
                 logs.AddRange(request.Entries);
-                 currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, true, Id));
+                await currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, true, Id));
             }
             // Case for if they are behind on logs
             else
             {
-                 currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, false, Id));
+                await currentLeader.ConfirmAppendEntriesRPC(new(Term, NextIndex, false, Id));
             }
         }
     }
@@ -331,9 +331,9 @@ public class Node : INode
             if (!CurrentTermVotes.ContainsKey(voteRequest.TermId))
             {
                 CurrentTermVotes[voteRequest.TermId] = voteRequest.CandidateId;
-                candidateNode.CastVoteRPC(new(voteRequest.TermId, true));
+                await candidateNode.CastVoteRPC(new(voteRequest.TermId, true));
             }
-            candidateNode.CastVoteRPC(new(voteRequest.TermId, false));
+            await candidateNode.CastVoteRPC(new(voteRequest.TermId, false));
         }
     }
     public async Task CastVoteRPC(CastVoteData voteRequest)
